@@ -1,0 +1,40 @@
+﻿<Window x:Class="ProxySeeker.CloseApplicationConfirmBox"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:toolkitLayout="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Layout.Toolkit"
+        xmlns:toolkitInput="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
+        Title="CloseApplicationConfirmBox" Height="100" Width="450" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="False" AllowDrop="True" BorderThickness="3" BorderBrush="#0098c5">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Light Theme -->
+                <!--<ResourceDictionary Source="Themes/Metro/Light/Metro.MSControls.Core.Implicit.xaml" />
+                <ResourceDictionary Source="Themes/Metro/Light/Metro.MSControls.Toolkit.Implicit.xaml" />-->
+
+                <!-- Dark Theme -->
+                <ResourceDictionary Source="/Themes/Metro/Dark/MetroDark.MSControls.Core.Implicit.xaml" />
+                <ResourceDictionary Source="/Themes/Metro/Dark/MetroDark.MSControls.Toolkit.Implicit.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Light Theme -->
+            <!--<SolidColorBrush x:Key="BackgroundKey" Color="#FFFFFF" />-->
+
+            <!-- Dark Theme -->
+            <SolidColorBrush x:Key="BackgroundKey" Color="#181818" />
+            <Style x:Key="MainLabelStyle" TargetType="Label">
+                <Setter Property="Foreground" Value="#767676" />
+                <Setter Property="FontSize" Value="18 "/>
+                <Setter Property="FontWeight" Value="Bold" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Background="Black">
+        <Label HorizontalAlignment="Center" FontSize="12" FontWeight="Bold" Margin="0,10,0,0" Name="lblMessage" Foreground="#0098c5">Do you want to exit?</Label>
+        <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal" Height="40" HorizontalAlignment="Right">
+            <Button Name="btnOK_Normal" Content="Normally exit" VerticalAlignment="Center" Margin="0,0,20,0" Width="120" Foreground="#0098c5" Click="btnOK_Normal_Click" />
+            <Button Name="btnOK_Forcing" Content="Forcing exit" VerticalAlignment="Center" Margin="0,0,20,0" Width="120" Foreground="#0098c5" Click="btnOK_Forcing_Click" />
+            <Button Name="btnCancel" Content="Cancel" VerticalAlignment="Center" Width="120" Margin="0,0,20,0" Foreground="#0098c5" Click="btnCancel_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

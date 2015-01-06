@@ -1,0 +1,77 @@
+﻿<Window x:Class="ProxySeeker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:toolkitLayout="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Layout.Toolkit"
+        xmlns:toolkitInput="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
+        Title="MainWindow" Height="500" Width="825" ResizeMode="CanMinimize" WindowStyle="None" AllowsTransparency="False" AllowDrop="True" BorderBrush="#0098c5" BorderThickness="3">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Light Theme -->
+                <!--<ResourceDictionary Source="Themes/Metro/Light/Metro.MSControls.Core.Implicit.xaml" />
+                <ResourceDictionary Source="Themes/Metro/Light/Metro.MSControls.Toolkit.Implicit.xaml" />-->
+
+                <!-- Dark Theme -->
+                <ResourceDictionary Source="/Themes/Metro/Dark/MetroDark.MSControls.Core.Implicit.xaml" />
+                <ResourceDictionary Source="/Themes/Metro/Dark/MetroDark.MSControls.Toolkit.Implicit.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Light Theme -->
+            <!--<SolidColorBrush x:Key="BackgroundKey" Color="#FFFFFF" />-->
+
+            <!-- Dark Theme -->
+            <SolidColorBrush x:Key="BackgroundKey" Color="#181818" />
+            <Style x:Key="MainLabelStyle" TargetType="Label">
+                <Setter Property="Foreground" Value="#767676" />
+                <Setter Property="FontSize" Value="13 "/>
+                <Setter Property="FontWeight" Value="Bold" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Background="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="35" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Name="dpHeader" MouseLeftButtonDown="dpHeader_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="500" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Margin="25,0,0,0" Foreground="Gray" VerticalContentAlignment="Center" FontSize="13" FontWeight="Bold">| Forum Poster</Label>
+                <Button Grid.Column="1" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,40,0" Name="btn_MinimizeInterface" Content="___" Click="btn_MinimizeInterface_Click" />
+                <Button Grid.Column="1" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,5,0" Name="btn_CloseInterface" Content="X" Click="btn_CloseInterface_Click"  />
+            </Grid>
+        </DockPanel>
+        <DockPanel Grid.Row="1" Name="dpMainHolder">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel Name="dpMainNavigation" Grid.Row="0">
+
+                </DockPanel>
+                <DockPanel Grid.Row="1" Name="dpUserWelcome">
+
+                </DockPanel>
+                <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">
+
+                </DockPanel>
+                <DockPanel Grid.Row="1" Name="dpSettings" Visibility="Hidden">
+
+                </DockPanel>
+            </Grid>
+        </DockPanel>
+        <DockPanel Grid.Row="2" LastChildFill="False" Background="#0098c5">
+            <Label DockPanel.Dock="Left" Content="version 1.0.0.0" Foreground="Black" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Name="lblVersion"/>
+            <TextBox DockPanel.Dock="Right" Width="90" Height="20" Margin="0,3,5,0" Name="tbRamConsumption" FontSize="13" />
+            <Label DockPanel.Dock="Right" Content="RAM: " Foreground="Black" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+            <TextBox DockPanel.Dock="Right" Width="60" Height="20" Margin="0,3,5,0" Name="tbCPUConsumption" FontSize="13" />
+            <Label DockPanel.Dock="Right" Content="CPU: " Foreground="Black" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+        </DockPanel>
+    </Grid>
+</Window>
