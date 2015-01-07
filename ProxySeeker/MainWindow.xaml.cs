@@ -120,6 +120,32 @@ namespace ProxySeeker
             }
         }
 
+        /// <summary>
+        /// Main label click single handler event
+        /// </summary>
+        private void MainLabel_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Controls.Label lbl = e.Source as System.Windows.Controls.Label;
+            BrushConverter bc = new BrushConverter();
+            foreach (System.Windows.Controls.Label item in mainLbls)
+            {
+                item.Foreground = (item.Content == lbl.Content) ? (Brush)bc.ConvertFrom("#0098c5") : (Brush)bc.ConvertFrom("#767676");
+            }
+
+            switch (lbl.Content.ToString().ToLower())
+            {
+                case "// guide":
+                    Change_WindowView(SystemUIView.WelcomeUI);
+                    break;
+                case "// seeking":
+                    Change_WindowView(SystemUIView.WorkingUI);
+                    break;                
+                case "// configure":
+                    Change_WindowView(SystemUIView.SettingsUI);
+                    break;
+            };
+        }
+
         #endregion
 
         #region action list
@@ -217,6 +243,8 @@ namespace ProxySeeker
             //add hidden dockpanels
             _uiHandler.AddHidden(dpWorking);
             _uiHandler.AddHidden(dpSettings);
+
+            _uiHandler.RunHandle(true);
         }
 
         /// <summary>
@@ -230,6 +258,8 @@ namespace ProxySeeker
             //add hidden dockpanels
             _uiHandler.AddHidden(dpUserWelcome);
             _uiHandler.AddHidden(dpSettings);
+
+            _uiHandler.RunHandle(true);
         }
 
         /// <summary>
@@ -243,6 +273,8 @@ namespace ProxySeeker
             //add hidden dockpanels
             _uiHandler.AddHidden(dpWorking);
             _uiHandler.AddHidden(dpUserWelcome);
+
+            _uiHandler.RunHandle(true);
         }
 
         #endregion        

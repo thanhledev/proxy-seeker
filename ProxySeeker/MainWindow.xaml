@@ -41,10 +41,14 @@
                     <ColumnDefinition Width="500" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Margin="25,0,0,0" Foreground="Gray" VerticalContentAlignment="Center" FontSize="13" FontWeight="Bold">| Forum Poster</Label>
-                <Button Grid.Column="1" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,40,0" Name="btn_MinimizeInterface" Content="___" Click="btn_MinimizeInterface_Click" />
-                <Button Grid.Column="1" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,5,0" Name="btn_CloseInterface" Content="X" Click="btn_CloseInterface_Click"  />
-            </Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="38" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Margin="25,0,0,0" Foreground="Gray" VerticalContentAlignment="Center" FontSize="13" FontWeight="Bold">| Proxy Seeker</Label>
+                <Button Grid.Column="1" Grid.Row="0" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,40,0" Name="btn_MinimizeInterface" Content="___" Click="btn_MinimizeInterface_Click" />
+                <Button Grid.Column="1" Grid.Row="0" VerticalContentAlignment="Center" FontSize="16" FontWeight="ExtraBold" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,5,0" Name="btn_CloseInterface" Content="X" Click="btn_CloseInterface_Click"  />                
+            </Grid>            
         </DockPanel>
         <DockPanel Grid.Row="1" Name="dpMainHolder">
             <Grid>
@@ -52,17 +56,19 @@
                     <RowDefinition Height="30" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <DockPanel Name="dpMainNavigation" Grid.Row="0">
-
+                <DockPanel Name="dpMainNavigation" Grid.Row="0" LastChildFill="False">
+                    <Label Margin="25,0,0,0" DockPanel.Dock="Left" Content="// Guide" Name="lblGuide" Style="{StaticResource MainLabelStyle}" Foreground="#0098c5" MouseLeftButtonUp="MainLabel_Click" />
+                    <Label DockPanel.Dock="Left" Content="// Seeking" Name="lblSeeking" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
+                    <Label DockPanel.Dock="Right" Content="// Configure" Name="lblConfigure" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpUserWelcome">
-
+                    
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">
-
+                    <Label>Working interface Working interface</Label>
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpSettings" Visibility="Hidden">
-
+                    
                 </DockPanel>
             </Grid>
         </DockPanel>

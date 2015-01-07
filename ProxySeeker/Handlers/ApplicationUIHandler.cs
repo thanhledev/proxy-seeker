@@ -91,9 +91,9 @@ namespace ProxySeeker.Handlers
         public void RunHandle(bool enable)
         {
             if (_hidden.Count > 0)
-                _hiddenChanged.Invoke(_currentWD, _hidden, false);
+                _hiddenChanged.Invoke(_currentWD, _hidden, true);
             if (_show.Count > 0)
-                _showChanged.Invoke(_currentWD, _show, false);
+                _showChanged.Invoke(_currentWD, _show, true);
         }
 
         /// <summary>
