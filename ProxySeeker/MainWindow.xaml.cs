@@ -146,6 +146,26 @@ namespace ProxySeeker
             };
         }
 
+        /// <summary>
+        /// Handler AutoSearchProxy checkbox checkedchanged event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbAutoSearchProxy_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// Handler AutoSearchProxy checkbox uncheckedchanged event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbAutoSearchProxy_Unchecked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         #endregion
 
         #region action list
@@ -278,5 +298,7 @@ namespace ProxySeeker
         }
 
         #endregion        
+
+        
     }
 }

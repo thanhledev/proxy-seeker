@@ -62,7 +62,34 @@
                     <Label DockPanel.Dock="Right" Content="// Configure" Name="lblConfigure" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpUserWelcome">
-                    
+                    <GroupBox Header="Settings" Padding="0" Margin="5,0,5,5" FontSize="12">
+                        <StackPanel>
+                            <DockPanel HorizontalAlignment="Left">
+                                <Label Height="30" FontSize="12" Content="Maximum Threads" />
+                                <TextBox Name="tbProxyThread" FontSize="12" Height="30" Width="60" Margin="10,0,10,0" />
+                                <Label Height="30" FontSize="12" Content="Timeout :" />
+                                <TextBox Name="tbProxyTimeout" FontSize="12" Height="30" Width="60" Margin="10,0,0,0" />
+                                <Label Height="30" FontSize="12" Content="sec(s)" />
+                            </DockPanel>
+                            <DockPanel HorizontalAlignment="Left">
+                                <CheckBox Name="cbAutoSearchProxy" Content="Automatically search for new proxies every " FontSize="12" Checked="cbAutoSearchProxy_Checked" Unchecked="cbAutoSearchProxy_Unchecked" />
+                                <ComboBox Name="cbSearchProxyInterval" FontSize="12" MaxDropDownHeight="150" Margin="5" Height="30" Width="120">
+                                    <ComboBoxItem Tag="30" FontSize="12">30 minutes</ComboBoxItem>
+                                    <ComboBoxItem Tag="60" FontSize="12">60 minutes</ComboBoxItem>
+                                    <ComboBoxItem Tag="90" FontSize="12">90 minutes</ComboBoxItem>
+                                    <ComboBoxItem Tag="120" FontSize="12">120 minutes</ComboBoxItem>
+                                    <ComboBoxItem Tag="180" FontSize="12">180 minutes</ComboBoxItem>
+                                </ComboBox>
+                            </DockPanel>
+                            <DockPanel>
+                                <CheckBox Name="chbTestProxies" Content="Test proxies after add?" FontSize="12" />
+                            </DockPanel>
+                            <DockPanel HorizontalAlignment="Left">
+                                <CheckBox Name="chbCheckAnonymous" Content="Check if anonymous?" FontSize="12" />
+                                <TextBox Name="tbAnonymousCheckSite" Height="30" Margin="5" Width="300" />
+                            </DockPanel>
+                        </StackPanel>                        
+                    </GroupBox>
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">
                     <Label>Working interface Working interface</Label>
