@@ -69,8 +69,8 @@ namespace ProxySeeker
             ApplicationMessageHandler.Instance.RunHandler();
 
             //Setup the ProxyHandler
-            ProxyHandler.Instance.RegisterControls(this, tbAliveProxy, sp_Proxies);
-            ProxyHandler.Instance.RegisterActions(updateProxyTable, updateStatisticTextBox);
+            ProxyHandler.Instance.RegisterControls(this, tbAliveProxy, tbTotalProxy, tbDeathProxy);
+            ProxyHandler.Instance.RegisterActions(updateStatisticTextBox);
 
             _uiHandler.SetupHandle(this, hiddenChange, showChange);
             _mainView = SystemUIView.WelcomeUI;
@@ -304,80 +304,7 @@ namespace ProxySeeker
                 tb.AppendText(Environment.NewLine);
                 tb.ScrollToEnd();
             }));
-        };
-
-        /// <summary>
-        /// Action for update proxy table
-        /// </summary>
-        Action<Window, StackPanel, List<SystemProxy>> updateProxyTable = (wd, sp, lst) =>
-        {
-            wd.Dispatcher.Invoke(new Action(() =>
-            {
-                sp.Children.Clear();
-
-                foreach (SystemProxy proxy in lst)
-                {
-                    DockPanel dp = new DockPanel();                    
-
-                    //label for ip address
-                    Label lblIpAddress = new Label();
-                    lblIpAddress.Width = 200;
-                    lblIpAddress.Content = proxy.ProxyIp;
-                    lblIpAddress.FontSize = 12;
-                    lblIpAddress.Foreground = (Brush)bc.ConvertFrom("#0098c5");
-                    lblIpAddress.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
-                    lblIpAddress.BorderThickness = (Thickness)tc.ConvertFrom("1,0,0,1");
-
-                    dp.Children.Add(lblIpAddress);
-
-                    //label for port address
-                    Label lblPortAddress = new Label();
-                    lblPortAddress.Width = 60;
-                    lblPortAddress.Content = proxy.ProxyPort;
-                    lblPortAddress.Foreground = (Brush)bc.ConvertFrom("#0098c5");
-                    lblPortAddress.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
-                    lblPortAddress.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
-                    lblPortAddress.HorizontalContentAlignment = HorizontalAlignment.Center;
-
-                    dp.Children.Add(lblPortAddress);
-
-                    //label for country 
-                    Label lblCountry = new Label();
-                    lblCountry.Width = 60;
-                    lblCountry.Content = proxy.CountryCode;
-                    lblCountry.Foreground = (Brush)bc.ConvertFrom("#0098c5");
-                    lblCountry.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
-                    lblCountry.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
-                    lblCountry.HorizontalContentAlignment = HorizontalAlignment.Center;
-
-                    dp.Children.Add(lblCountry);
-
-                    //label for speed
-                    Label lblSpeed = new Label();
-                    lblSpeed.Width = 100;
-                    lblSpeed.Content = proxy.showProxySpeed();
-                    lblSpeed.Foreground = (Brush)bc.ConvertFrom("#0098c5");
-                    lblSpeed.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
-                    lblSpeed.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
-                    lblSpeed.HorizontalContentAlignment = HorizontalAlignment.Center;
-
-                    dp.Children.Add(lblSpeed);
-
-                    //label for status
-                    Label lblStatus = new Label();
-                    lblStatus.Width = 350;
-                    lblStatus.Content = "//awaiting";
-                    lblStatus.Foreground = (Brush)bc.ConvertFrom("#0098c5");
-                    lblStatus.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
-                    lblStatus.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
-                    lblStatus.HorizontalContentAlignment = HorizontalAlignment.Center;
-
-                    dp.Children.Add(lblStatus);
-
-                    sp.Children.Add(dp);
-                }
-            }));
-        };
+        };        
 
         Action<Window, StackPanel, DockPanel> ToogleSelectedProxyDisplay = (wd, sp, dp) =>
         {

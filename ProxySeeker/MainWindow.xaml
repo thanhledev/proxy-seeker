@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:toolkitLayout="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Layout.Toolkit"
         xmlns:toolkitInput="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
-        Title="MainWindow" Height="650" Width="825" ResizeMode="CanMinimize" WindowStyle="None" AllowsTransparency="False" AllowDrop="True" BorderBrush="#0098c5" BorderThickness="3">
+        Title="MainWindow" Height="500" Width="825" ResizeMode="CanMinimize" WindowStyle="None" AllowsTransparency="False" AllowDrop="True" BorderBrush="#0098c5" BorderThickness="3">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -64,49 +64,26 @@
                 <DockPanel Grid.Row="1" Name="dpUserWelcome">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="350" />
-                            <RowDefinition Height="40" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="40" />
+                            
                         </Grid.RowDefinitions>
-                        <GroupBox Header="Proxies" Grid.Row="0" Padding="0" Margin="5,0,5,5" FontSize="12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200" />
-                                    <ColumnDefinition Width="60" />
-                                    <ColumnDefinition Width="60" />
-                                    <ColumnDefinition Width="100" />
-                                    <ColumnDefinition Width="*" />                                    
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="30" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <Label Grid.Column="0" Grid.Row="0" Background="#2a2a2a" FontSize="12" BorderThickness="1" BorderBrush="#0098c5">Host</Label>
-                                <Label Grid.Column="1" Grid.Row="0" Background="#2a2a2a" FontSize="12" BorderThickness="1" BorderBrush="#0098c5" HorizontalContentAlignment="Center">Port</Label>
-                                <Label Grid.Column="2" Grid.Row="0" Background="#2a2a2a" FontSize="12" BorderThickness="1" BorderBrush="#0098c5" HorizontalContentAlignment="Center">Country</Label>
-                                <Label Grid.Column="3" Grid.Row="0" Background="#2a2a2a" FontSize="12" BorderThickness="1" BorderBrush="#0098c5" HorizontalContentAlignment="Center">Speed</Label>
-                                <Label Grid.Column="4" Grid.Row="0" Background="#2a2a2a" FontSize="12" BorderThickness="1" BorderBrush="#0098c5" HorizontalContentAlignment="Center">Status</Label>
-                                <ScrollViewer VerticalScrollBarVisibility="Visible" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                                    <StackPanel Name="sp_Proxies">
-                                        
-                                    </StackPanel>
-                                </ScrollViewer>
-                            </Grid>
-                        </GroupBox>
+                        <DockPanel Grid.Row="0">
+                            <TextBox Name="tbLogs" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Visible" Foreground="#0098c5" FontSize="12" Margin="5,0,5,5" />
+                        </DockPanel>
                         <DockPanel Grid.Row="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="400" />
+                                    <ColumnDefinition Width="350" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Button Grid.Column="0" Name="btnControl" Content="Start/Stop" Height="30" Width="120" Foreground="#0098c5" FontSize="12" Margin="5,0,0,0" HorizontalAlignment="Left" Click="btnControl_Click" />
                                 <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
-                                    <TextBox Grid.Column="1" Name="tbAliveProxy" Height="30" Width="150" Background="Green" Margin="0,0,5,0" IsEnabled="False" Foreground="#0098c5" />                                    
+                                    <TextBox Grid.Column="1" Name="tbTotalProxy" Height="30" Width="150" Background="#0098c5" Margin="0,0,5,0" IsEnabled="False" Foreground="Black" />
+                                    <TextBox Grid.Column="1" Name="tbAliveProxy" Height="30" Width="150" Background="#0098c5" Margin="0,0,5,0" IsEnabled="False" Foreground="Black" HorizontalContentAlignment="Right" />
+                                    <TextBox Grid.Column="1" Name="tbDeathProxy" Height="30" Width="150" Background="#0098c5" Margin="0,0,5,0" IsEnabled="False" Foreground="Black" HorizontalContentAlignment="Right" />
                                 </StackPanel>
                             </Grid>
-                        </DockPanel>
-                        <DockPanel Grid.Row="2">
-                            <TextBox Name="tbLogs" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Visible" Foreground="#0098c5" FontSize="12" Margin="5,0,5,5" />
                         </DockPanel>
                     </Grid>
                 </DockPanel>
