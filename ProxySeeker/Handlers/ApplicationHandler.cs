@@ -21,11 +21,7 @@ namespace ProxySeeker
         /// </summary>
         private static ApplicationHandler _instance = null;
         private static readonly object _instanceLocker = new object();
-        private static readonly object _loadingLocker = new object();
-
-        //directory path
-        public static string _systemIniFile = Environment.CurrentDirectory + "\\system.ini";
-        public static string _sourceIniFile = Environment.CurrentDirectory + "\\sources.ini";
+        private static readonly object _loadingLocker = new object();               
 
         //system token
         private static string _defaultValue = "???";

@@ -32,10 +32,9 @@ namespace ProxySeeker
         //ui handlers
         private ApplicationUIHandler _uiHandler = new ApplicationUIHandler();
         private SystemUIView _mainView;
-        private BrushConverter bc = new BrushConverter();
-        private ThicknessConverter tc = new ThicknessConverter();
-        private FontWeightConverter fwc = new FontWeightConverter();
-
+        private static BrushConverter bc = new BrushConverter();
+        private static ThicknessConverter tc = new ThicknessConverter();        
+        
         private DispatcherTimer _stopTimer = new DispatcherTimer();
 
         #endregion        
@@ -64,6 +63,14 @@ namespace ProxySeeker
             //Setup & run the ApplicationStatisticHandler
             ApplicationStatisticsHandler.Instance.SetupHandler(this, tbCPUConsumption, tbRamConsumption, updateStatisticTextBox);
             ApplicationStatisticsHandler.Instance.RunHandler();
+
+            //Setup & run the ApplicationMessageHandler
+            ApplicationMessageHandler.Instance.RegisterHandler(this, tbLogs, updateLogs);
+            ApplicationMessageHandler.Instance.RunHandler();
+
+            //Setup the ProxyHandler
+            ProxyHandler.Instance.RegisterControls(this, tbAliveProxy, sp_Proxies);
+            ProxyHandler.Instance.RegisterActions(updateProxyTable, updateStatisticTextBox);
 
             _uiHandler.SetupHandle(this, hiddenChange, showChange);
             _mainView = SystemUIView.WelcomeUI;
@@ -147,23 +154,100 @@ namespace ProxySeeker
         }
 
         /// <summary>
-        /// Handler AutoSearchProxy checkbox checkedchanged event
+        /// Handle Proxy list previewmousewheel event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cbAutoSearchProxy_Checked(object sender, RoutedEventArgs e)
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-
+            ScrollViewer scv = (ScrollViewer)sender;
+            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
+            e.Handled = true;
         }
 
         /// <summary>
-        /// Handler AutoSearchProxy checkbox uncheckedchanged event
+        /// Handle ProxyThread textbox lost focus event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cbAutoSearchProxy_Unchecked(object sender, RoutedEventArgs e)
+        private void tbProxyThread_LostFocus(object sender, RoutedEventArgs e)
         {
+            ProxyHandler.Instance.Threads = Convert.ToInt32(tbProxyThread.Text);
+        }
 
+        /// <summary>
+        /// Handle ProxyTimeout textbox lost focus event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tbProxyTimeout_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.TimeOut = Convert.ToInt32(tbProxyTimeout.Text);
+        }
+
+        /// <summary>
+        /// Handle AutoSearchProxy checkbox checkedchanged event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbAutoSearchProxy_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.AutoSearchProxy = Convert.ToBoolean(ckbAutoSearchProxy.IsChecked);
+            ProxyHandler.Instance.SwitchManager(ProxyHandler.Instance.AutoSearchProxy);
+        }
+
+        /// <summary>
+        /// Handle SearchProxyInterval comboBox selection changed event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbSearchProxyInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cbSearchProxyInterval.SelectedItem != null)
+            {
+                ComboBoxItem selected = (ComboBoxItem)cbSearchProxyInterval.SelectedItem;
+                ProxyHandler.Instance.SearchProxyInterval = Convert.ToInt32(selected.Tag.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Handle TestProxies checkbox checked/unchecked event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbTestProxies_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.TestProxy = Convert.ToBoolean(ckbTestProxies.IsChecked);
+        }
+
+        /// <summary>
+        /// Handle CheckAnonymous checkbox checked/unchecked event 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbCheckAnonymous_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.CheckAnonymous = Convert.ToBoolean(ckbCheckAnonymous.IsChecked);
+        }
+
+        /// <summary>
+        /// Handle AnonymousCheckSite textbox lost focus event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tbAnonymousCheckSite_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.CheckAnonymousLink = tbAnonymousCheckSite.Text;
+        }
+                
+        /// <summary>
+        /// Handle Control button click event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnControl_Click(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.RunHandler();
         }
 
         #endregion
@@ -205,6 +289,103 @@ namespace ProxySeeker
                 foreach (var i in ctr)
                 {
                     i.Visibility = (flag) ? Visibility.Visible : Visibility.Hidden;
+                }
+            }));
+        };
+
+        /// <summary>
+        /// Action for log textbox
+        /// </summary>
+        Action<Window, TextBox, string> updateLogs = (wd, tb, message) =>
+        {
+            wd.Dispatcher.Invoke(new Action(() =>
+            {
+                tb.AppendText(message);
+                tb.AppendText(Environment.NewLine);
+                tb.ScrollToEnd();
+            }));
+        };
+
+        /// <summary>
+        /// Action for update proxy table
+        /// </summary>
+        Action<Window, StackPanel, List<SystemProxy>> updateProxyTable = (wd, sp, lst) =>
+        {
+            wd.Dispatcher.Invoke(new Action(() =>
+            {
+                sp.Children.Clear();
+
+                foreach (SystemProxy proxy in lst)
+                {
+                    DockPanel dp = new DockPanel();                    
+
+                    //label for ip address
+                    Label lblIpAddress = new Label();
+                    lblIpAddress.Width = 200;
+                    lblIpAddress.Content = proxy.ProxyIp;
+                    lblIpAddress.FontSize = 12;
+                    lblIpAddress.Foreground = (Brush)bc.ConvertFrom("#0098c5");
+                    lblIpAddress.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
+                    lblIpAddress.BorderThickness = (Thickness)tc.ConvertFrom("1,0,0,1");
+
+                    dp.Children.Add(lblIpAddress);
+
+                    //label for port address
+                    Label lblPortAddress = new Label();
+                    lblPortAddress.Width = 60;
+                    lblPortAddress.Content = proxy.ProxyPort;
+                    lblPortAddress.Foreground = (Brush)bc.ConvertFrom("#0098c5");
+                    lblPortAddress.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
+                    lblPortAddress.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
+                    lblPortAddress.HorizontalContentAlignment = HorizontalAlignment.Center;
+
+                    dp.Children.Add(lblPortAddress);
+
+                    //label for country 
+                    Label lblCountry = new Label();
+                    lblCountry.Width = 60;
+                    lblCountry.Content = proxy.CountryCode;
+                    lblCountry.Foreground = (Brush)bc.ConvertFrom("#0098c5");
+                    lblCountry.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
+                    lblCountry.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
+                    lblCountry.HorizontalContentAlignment = HorizontalAlignment.Center;
+
+                    dp.Children.Add(lblCountry);
+
+                    //label for speed
+                    Label lblSpeed = new Label();
+                    lblSpeed.Width = 100;
+                    lblSpeed.Content = proxy.showProxySpeed();
+                    lblSpeed.Foreground = (Brush)bc.ConvertFrom("#0098c5");
+                    lblSpeed.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
+                    lblSpeed.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
+                    lblSpeed.HorizontalContentAlignment = HorizontalAlignment.Center;
+
+                    dp.Children.Add(lblSpeed);
+
+                    //label for status
+                    Label lblStatus = new Label();
+                    lblStatus.Width = 350;
+                    lblStatus.Content = "//awaiting";
+                    lblStatus.Foreground = (Brush)bc.ConvertFrom("#0098c5");
+                    lblStatus.BorderBrush = (Brush)bc.ConvertFrom("#0098c5");
+                    lblStatus.BorderThickness = (Thickness)tc.ConvertFrom("0,0,0,1");
+                    lblStatus.HorizontalContentAlignment = HorizontalAlignment.Center;
+
+                    dp.Children.Add(lblStatus);
+
+                    sp.Children.Add(dp);
+                }
+            }));
+        };
+
+        Action<Window, StackPanel, DockPanel> ToogleSelectedProxyDisplay = (wd, sp, dp) =>
+        {
+            wd.Dispatcher.Invoke(new Action(() =>
+            {
+                foreach (DockPanel i in Helper.FindVisualChildren<DockPanel>(sp))
+                {
+                    i.Background = i == dp ? (Brush)bc.ConvertFrom("#464545") : (Brush)bc.ConvertFrom("Black");
                 }
             }));
         };
@@ -297,8 +478,7 @@ namespace ProxySeeker
             _uiHandler.RunHandle(true);
         }
 
-        #endregion        
-
+        #endregion                                       
         
     }
 }

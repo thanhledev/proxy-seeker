@@ -21,6 +21,7 @@ using System.Web;
 using HtmlAgilityPack;
 using ProxySeeker.DataTypes;
 using ProxySeeker.Utilities;
+using System.Text.RegularExpressions;
 
 namespace ProxySeeker
 {
@@ -35,15 +36,16 @@ namespace ProxySeeker
         private static readonly object _usingLocker = new object();
         private static readonly object _foundLocker = new object();
         private static readonly object _stopLocker = new object();
+        private static readonly object _invokeLocker = new object();
         private static readonly object _finishProxyManagerLocker = new object();
         private string _savePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"ProxySeeker\");
-        private string _systemIniFile = System.IO.Path.Combine(Environment.CurrentDirectory, @"\system.ini");
-        private string _dbLocation = System.IO.Path.Combine(Environment.CurrentDirectory, @"\locations.txt");
+        private string _systemIniFile = Environment.CurrentDirectory + "\\system.ini";
+        private string _dbLocation = Environment.CurrentDirectory + "\\locations.txt";
 
         private long wNumber = 16777216;
         private long xNumber = 65536;
         private long yNumber = 256;
-
+        private string proxyPattern = @"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b:\d{2,5}";
         //for working variables
         private static string _defaultValue = "???";
         private bool _autoSearchProxy;
@@ -122,7 +124,7 @@ namespace ProxySeeker
                 "http://aliveproxy.com/de-proxy-list/",
                 "http://aliveproxy.com/anonymous-proxy-list/",
                 "http://aliveproxy.com/transparent-proxy-list/",
-                "http://checkerproxy.net/all_proxy",
+                //"http://checkerproxy.net/all_proxy",
                 "http://www.cool-tests.com/Azerbaijan-proxy.php",
                 "http://www.cool-tests.com/Albania-proxy.php",
                 "http://www.cool-tests.com/Algeria-proxy.php",
@@ -207,48 +209,48 @@ namespace ProxySeeker
                 "http://www.cool-tests.com/Ecuador-proxy.php",
                 "http://www.cool-tests.com/South-Korea-proxy.php",
                 "http://www.cool-tests.com/Japan-proxy.php",
-                "http://fineproxy.org/",
-                "http://www.getproxy.jp/",
-                "http://www.getproxy.jp/default/2",
-                "http://www.getproxy.jp/default/3",
-                "http://www.getproxy.jp/default/4",
-                "http://www.getproxy.jp/default/5",
-                "http://www.google-proxy.net/",
-                "http://www.hotvpn.com/ru/proxies/",
-                "http://www.hotvpn.com/proxies/2/",
-                "http://www.hotvpn.com/proxies/3/",
-                "http://www.hotvpn.com/proxies/4/",
-                "http://www.hotvpn.com/proxies/5/",
-                "http://letushide.com/protocol/https/list_of_free_HTTPS_proxy_servers",
-                "http://letushide.com/protocol/https/2/list_of_free_HTTPS_proxy_servers",
-                "http://letushide.com/protocol/https/3/list_of_free_HTTPS_proxy_servers",
-                "http://letushide.com/protocol/https/4/list_of_free_HTTPS_proxy_servers",
-                "http://letushide.com/protocol/https/5/list_of_free_HTTPS_proxy_servers",
-                "http://letushide.com/protocol/socks/",
-                "http://letushide.com/protocol/socks/2/list_of_free_SOCKS_proxy_servers",
-                "http://letushide.com/protocol/http/",
-                "http://letushide.com/protocol/http/2/list_of_free_HTTP_proxy_servers",
-                "http://letushide.com/protocol/http/3/list_of_free_HTTP_proxy_servers",
-                "http://letushide.com/protocol/http/4/list_of_free_HTTP_proxy_servers",
-                "http://letushide.com/protocol/http/5/list_of_free_HTTP_proxy_servers",
-                "http://notan.h1.ru/hack/xwww/proxy1.html",
-                "http://notan.h1.ru/hack/xwww/proxy2.html",
-                "http://notan.h1.ru/hack/xwww/proxy3.html",
-                "http://proxylist.sakura.ne.jp/index.htm?pages=0",
-                "http://proxylist.sakura.ne.jp/index.htm?pages=1",
-                "http://proxylist.sakura.ne.jp/index.htm?pages=2",
-                "http://nntime.com/",
-                "http://nntime.com/proxy-list-02.htm",
-                "http://nntime.com/proxy-list-03.htm",
-                "http://txt.proxyspy.net/proxy.txt",
-                "http://www.rmccurdy.com/scripts/proxy/good.txt",
-                "http://proxy-ip-list.com/download/free-proxy-list.txt",
-                "http://www.shroomery.org/ythan/proxylist.php/RK=0",
-                "http://50na50.net/no_anonim_http.txt",
-                "http://www.romantic-collection.net/proxy.txt",
-                "http://vmarte.com/proxy/proxy_all.txt",
-                "http://reptv.ru/shy/proxylist.txt",
-                "http://pozitiv.3owl.com/proxy.txt"
+                //"http://fineproxy.org/",
+                //"http://www.getproxy.jp/",
+                //"http://www.getproxy.jp/default/2",
+                //"http://www.getproxy.jp/default/3",
+                //"http://www.getproxy.jp/default/4",
+                //"http://www.getproxy.jp/default/5",
+                //"http://www.google-proxy.net/",
+                //"http://www.hotvpn.com/ru/proxies/",
+                //"http://www.hotvpn.com/proxies/2/",
+                //"http://www.hotvpn.com/proxies/3/",
+                //"http://www.hotvpn.com/proxies/4/",
+                //"http://www.hotvpn.com/proxies/5/",
+                //"http://letushide.com/protocol/https/list_of_free_HTTPS_proxy_servers",
+                //"http://letushide.com/protocol/https/2/list_of_free_HTTPS_proxy_servers",
+                //"http://letushide.com/protocol/https/3/list_of_free_HTTPS_proxy_servers",
+                //"http://letushide.com/protocol/https/4/list_of_free_HTTPS_proxy_servers",
+                //"http://letushide.com/protocol/https/5/list_of_free_HTTPS_proxy_servers",
+                //"http://letushide.com/protocol/socks/",
+                //"http://letushide.com/protocol/socks/2/list_of_free_SOCKS_proxy_servers",
+                //"http://letushide.com/protocol/http/",
+                //"http://letushide.com/protocol/http/2/list_of_free_HTTP_proxy_servers",
+                //"http://letushide.com/protocol/http/3/list_of_free_HTTP_proxy_servers",
+                //"http://letushide.com/protocol/http/4/list_of_free_HTTP_proxy_servers",
+                //"http://letushide.com/protocol/http/5/list_of_free_HTTP_proxy_servers",
+                //"http://notan.h1.ru/hack/xwww/proxy1.html",
+                //"http://notan.h1.ru/hack/xwww/proxy2.html",
+                //"http://notan.h1.ru/hack/xwww/proxy3.html",
+                //"http://proxylist.sakura.ne.jp/index.htm?pages=0",
+                //"http://proxylist.sakura.ne.jp/index.htm?pages=1",
+                //"http://proxylist.sakura.ne.jp/index.htm?pages=2",
+                //"http://nntime.com/",
+                //"http://nntime.com/proxy-list-02.htm",
+                //"http://nntime.com/proxy-list-03.htm",
+                //"http://txt.proxyspy.net/proxy.txt",
+                //"http://www.rmccurdy.com/scripts/proxy/good.txt",
+                //"http://proxy-ip-list.com/download/free-proxy-list.txt",
+                //"http://www.shroomery.org/ythan/proxylist.php/RK=0",
+                //"http://50na50.net/no_anonim_http.txt",
+                //"http://www.romantic-collection.net/proxy.txt",
+                //"http://vmarte.com/proxy/proxy_all.txt",
+                //"http://reptv.ru/shy/proxylist.txt",
+                //"http://pozitiv.3owl.com/proxy.txt"
             };
 
         private bool _isTesting;
@@ -318,17 +320,9 @@ namespace ProxySeeker
         {
             get { return _aliveNumber; }
             set { _aliveNumber = value; }
-        }
+        }        
 
-        private TextBox _deathNumber = new TextBox();
-
-        public TextBox DeathNumber
-        {
-            get { return _deathNumber; }
-            set { _deathNumber = value; }
-        }
-
-        private Action<Window, StackPanel, List<DockPanel>> _updateProxyTable;
+        private Action<Window, StackPanel, List<SystemProxy>> _updateProxyTable;
         private Action<Window, TextBox, string> _updateNumber;
         
         public bool isLoadingCompleted = false;
@@ -377,11 +371,11 @@ namespace ProxySeeker
             _proxyManager = new Thread(proxyManager_DoWork);
             _proxyManager.IsBackground = true;
 
-            if (_autoSearchProxy)
-            {
-                IsTesting = true;
-                _proxyManager.Start();
-            }
+            //if (_autoSearchProxy)
+            //{
+            //    IsTesting = true;
+            //    _proxyManager.Start();
+            //}
 
             lock (_loadingLocker)
                 isLoadingCompleted = true;
@@ -473,16 +467,9 @@ namespace ProxySeeker
                         var document = new HtmlDocument();
                         bool isDownload = false;
                         using (var reader = new StreamReader(anonyResponse.GetResponseStream()))
-                        {
-                            try
-                            {
-                                document.Load(reader.BaseStream, anonyEncoding);
-                                isDownload = true;
-                            }
-                            catch (Exception ex)
-                            {
-
-                            }
+                        {                            
+                            document.Load(reader.BaseStream, anonyEncoding);
+                            isDownload = true;
                         }
 
                         if (isDownload)
@@ -495,8 +482,7 @@ namespace ProxySeeker
                                     {
                                         lock (_enqueueLocker)
                                         {
-                                            FilterProxies(currentProxy);
-                                            //invoke update textbox here
+                                            FilterProxies(currentProxy);                                            
                                         }
                                     }
                                 }
@@ -504,16 +490,15 @@ namespace ProxySeeker
                                 {
                                     lock (_enqueueLocker)
                                     {
-                                        FilterProxies(currentProxy);
-                                        //invoke update textbox here
+                                        FilterProxies(currentProxy);                                        
                                     }
                                 }
                             }
-                        }
+                        }                        
                     }
                     catch (Exception ex)
                     {
-
+                        //testing purpose here
                     }
                 }
                 else
@@ -529,8 +514,8 @@ namespace ProxySeeker
             if (_finishWorker == _threads)
             {
                 UpdateProxies();
-                //invoke update proxy table & textboxes here
-
+                //invoke update proxy table
+                _updateProxyTable.Invoke(_currentWD, _proxyTable, _publicProxies.ToList());
                 _isTesting = false;
                 _finishWorker = 0;
             }
@@ -615,24 +600,36 @@ namespace ProxySeeker
                 _finishFounder++;
 
             if (_finishFounder == 10)
-            {
+            {                
                 if (_testProxy)
                 {
                     IsTesting = true;
+                    IsScraping = false;                    
+                    UpdateProxies(_foundProxies);
+                    UpdateProxyQueueInformation(ref _publicProxies);
+                    CreateTestList();
                     //invoke update proxy table & textbox here
+                    _updateProxyTable.Invoke(_currentWD, _proxyTable, _foundProxies.ToList());
+                    _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, _foundProxies.Count));                    
 
                     for (int i = 0; i < _threads; i++)
                     {
-                        
+                        _tester[i] = new Thread(tester_DoWork);
+                        _tester[i].IsBackground = true;
+                        _tester[i].Start();
                     }
                 }
                 else
                 {
-                    IsScraping = false;
+                    IsScraping = false;                    
                     UpdateProxies(_foundProxies);
+                    UpdateProxyQueueInformation(ref _publicProxies);
                     CreateTestList();
-                    //invoke update proxy table here
+                    //invoke update proxy table & textbox here
+                    _updateProxyTable.Invoke(_currentWD, _proxyTable, _testList.ToList());
+                    _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, _testList.Count));                    
                 }
+                _finishFounder = 0;
             }
         }
 
@@ -720,7 +717,7 @@ namespace ProxySeeker
         /// </summary>
         /// <param name="updateProxyTable"></param>
         /// <param name="updateTextBox"></param>
-        public void RegisterActions(Action<Window, StackPanel, List<DockPanel>> updateProxyTable, Action<Window, TextBox, string> updateTextBox)
+        public void RegisterActions(Action<Window, StackPanel, List<SystemProxy>> updateProxyTable, Action<Window, TextBox, string> updateTextBox)
         {
             _updateProxyTable = updateProxyTable;
             _updateNumber = updateTextBox;
@@ -733,11 +730,10 @@ namespace ProxySeeker
         /// <param name="tbAlive"></param>
         /// <param name="tbDeath"></param>
         /// <param name="proxyTable"></param>
-        public void RegisterControls(Window wd, TextBox tbAlive, TextBox tbDeath, StackPanel proxyTable)
+        public void RegisterControls(Window wd, TextBox tbAlive, StackPanel proxyTable)
         {
             _currentWD = wd;
-            _aliveNumber = tbAlive;
-            _deathNumber = tbDeath;
+            _aliveNumber = tbAlive;            
             _proxyTable = proxyTable;
         }
 
@@ -759,8 +755,7 @@ namespace ProxySeeker
         public void RunHandler()
         {
             if (!IsTesting && !IsScraping)
-            {
-                IsScraping = true;
+            {                
                 _proxyManager.Start();
                 ApplicationMessageHandler.Instance.AddMessage("Begin running proxy system!");
             }
@@ -776,6 +771,8 @@ namespace ProxySeeker
             _wakeUpPoint.Clear();
             DateTime holdPoint = DateTime.Now;
             DateTime temp = new DateTime(holdPoint.Year, holdPoint.Month, holdPoint.Day, holdPoint.Hour, holdPoint.Minute, holdPoint.Second);
+
+            _wakeUpPoint.Enqueue(holdPoint);
 
             do
             {
@@ -823,7 +820,7 @@ namespace ProxySeeker
                     _publicProxies.Enqueue(i);
                 }
                 _alive = new List<SystemProxy>();                               
-            }            
+            }
         }
 
         /// <summary>
@@ -837,10 +834,12 @@ namespace ProxySeeker
                 _publicProxies.Clear();
                 foreach (var i in proxies)
                 {
-                    _publicProxies.Enqueue(i);
+                    Match match = Regex.Match(i.ProxyIp + ":" + i.ProxyPort, proxyPattern);
+                    if(match.Success)
+                        _publicProxies.Enqueue(i);
                 }
             }
-        }
+        }        
 
         /// <summary>
         /// Create proxy testing list
@@ -875,6 +874,8 @@ namespace ProxySeeker
         private void FilterProxies(SystemProxy proxy)
         {
             _alive.Add(proxy);
+            lock (_invokeLocker)
+                _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(_alive.Count, _foundProxies.Count));
         }
 
         /// <summary>
@@ -887,6 +888,49 @@ namespace ProxySeeker
                 _stopManager = true;
             }
         }
+
+        /// <summary>
+        /// Create alive message
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        private string CreateAliveMessage(int number, int total)
+        {
+            return "Checked : " + number + " | " + total;
+        }
+
+        /// <summary>
+        /// Update founded Proxy's information
+        /// </summary>
+        /// <param name="pQueue"></param>
+        private void UpdateProxyQueueInformation(ref Queue<SystemProxy> pQueue)
+        {
+            foreach(SystemProxy proxy in pQueue)
+            {
+                proxy.Speed = -1;
+                proxy.CountryCode = LocateProxyIpAddress(proxy.ProxyIp);
+            }
+        }
+
+        /// <summary>
+        /// Locate proxy
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <returns></returns>
+        private string LocateProxyIpAddress(string ipAddress)
+        {
+            string[] content = ipAddress.Split('.');
+
+            long proxyValue = wNumber * Convert.ToInt32(content[0]) + yNumber * Convert.ToInt32(content[1]) + xNumber * Convert.ToInt32(content[2]) + Convert.ToInt32(content[3]);
+
+            foreach (var location in _locations)
+            {
+                if (proxyValue >= location.minThreshold && proxyValue <= location.maxThreshold)
+                    return location.countryCode;
+            }
+
+            return "N/A";
+        }        
 
         #endregion        
     }

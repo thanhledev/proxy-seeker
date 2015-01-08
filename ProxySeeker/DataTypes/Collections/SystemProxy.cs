@@ -40,15 +40,7 @@ namespace ProxySeeker.DataTypes
             get { return _password; }
             set { _password = value; }
         }
-
-        private bool _isPrivate;
-
-        public bool IsPrivate
-        {
-            get { return _isPrivate; }
-            set { _isPrivate = value; }
-        }
-
+        
         private bool _isAlive;
 
         public bool IsAlive
@@ -57,28 +49,45 @@ namespace ProxySeeker.DataTypes
             set { _isAlive = value; }
         }
 
+        private string _countryCode;
+
+        public string CountryCode
+        {
+            get { return _countryCode; }
+            set { _countryCode = value; }
+        }
+
+        private double _speed;
+
+        public double Speed
+        {
+            get { return _speed; }
+            set { _speed = value; }
+        }
+
         #endregion
 
         #region constructors
 
         public SystemProxy()
-            : this("", "", "", "", false, false)
+            : this("", "", "", "", false, "", 0)
         {
         }
 
         public SystemProxy(string ip, string port, string username, string password)
-            : this(ip, port, username, password, false, false)
+            : this(ip, port, username, password, false, "", 0)
         {
         }
 
-        public SystemProxy(string ip, string port, string username, string password, bool isPrivate, bool isAlive)
+        public SystemProxy(string ip, string port, string username, string password, bool isAlive, string countryCode, double speed)
         {
             this._proxyIp = ip;
             this._proxyPort = port;
             this._username = username;
-            this._password = password;
-            this._isPrivate = isPrivate;
+            this._password = password;            
             this._isAlive = isAlive;
+            this._countryCode = countryCode;
+            this._speed = speed;
         }
 
         #endregion
@@ -86,13 +95,18 @@ namespace ProxySeeker.DataTypes
         #region utility Methods
 
         public override string ToString()
-        {
-            if (IsPrivate)
-                return String.Format("{0}:{1}:{2}:{3}", _proxyIp, _proxyPort, _username, _password);
-            else
-                return String.Format("{0}:{1}", _proxyIp, _proxyPort);
+        {            
+            return String.Format("{0}:{1}", _proxyIp, _proxyPort);
         }
 
+        public string showProxySpeed()
+        {
+            if (_speed < 0)
+                return "N/A";
+            else
+                return _speed.ToString("N3") + " s";
+        }
+        
         #endregion
     }
 }
