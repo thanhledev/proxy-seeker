@@ -77,7 +77,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataTypes\Collections\IpGeoLocation.cs" />
+    <Compile Include="DataTypes\Collections\ProxySource.cs" />
+    <Compile Include="DataTypes\Collections\ProxySourceCollection.cs" />
     <Compile Include="DataTypes\Enums\AppExitingMessage.cs" />
     <Compile Include="DataTypes\Enums\AppMessage.cs" />
     <Compile Include="DataTypes\Enums\AppState.cs" />

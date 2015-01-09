@@ -37,7 +37,9 @@ namespace ProxySeeker
         
         private DispatcherTimer _stopTimer = new DispatcherTimer();
 
-        #endregion        
+        private int _tempAutoSearchProxyInterval = 0;
+
+        #endregion
 
         #region Window event handlers
 
@@ -59,6 +61,25 @@ namespace ProxySeeker
             }
 
             //Initialize all dynamic controls from ini & xml files.
+            ckbAutoSearchProxy.IsChecked = ProxyHandler.Instance.AutoSearchProxy;
+            _tempAutoSearchProxyInterval = ProxyHandler.Instance.SearchProxyInterval;
+
+            foreach (ComboBoxItem item in cbSearchProxyInterval.Items)
+            {
+                if (item.Tag.ToString() == _tempAutoSearchProxyInterval.ToString())
+                {
+                    item.IsSelected = true;
+                    break;
+                }
+            }
+
+            ckbTestProxies.IsChecked = ProxyHandler.Instance.TestProxy;
+            ckbCheckAnonymous.IsChecked = ProxyHandler.Instance.CheckAnonymous;
+            tbAnonymousCheckSite.Text = ProxyHandler.Instance.CheckAnonymousLink;
+            tbProxyThread.Text = ProxyHandler.Instance.Threads.ToString();
+
+            int seconds = ProxyHandler.Instance.TimeOut / 1000;
+            tbProxyTimeout.Text = seconds.ToString();
 
             //Setup & run the ApplicationStatisticHandler
             ApplicationStatisticsHandler.Instance.SetupHandler(this, tbCPUConsumption, tbRamConsumption, updateStatisticTextBox);
@@ -75,7 +96,7 @@ namespace ProxySeeker
             _uiHandler.SetupHandle(this, hiddenChange, showChange);
             _mainView = SystemUIView.WelcomeUI;
             Change_WindowView(_mainView);
-        }
+        }        
 
         #endregion
 

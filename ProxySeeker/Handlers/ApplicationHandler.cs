@@ -41,14 +41,7 @@ namespace ProxySeeker
         {
             get { return _applicationVersion; }
             set { _applicationVersion = value; }
-        }
-
-        private static string _encryptKey;
-
-        public string EncryptKey
-        {
-            get { return _encryptKey; }
-        }
+        }        
 
         private bool _isStopNotify = false;
 
@@ -152,7 +145,7 @@ namespace ProxySeeker
                 lock (_loadingLocker)
                     isLoadingCompleted = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }

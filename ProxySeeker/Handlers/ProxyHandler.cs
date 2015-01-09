@@ -22,6 +22,7 @@ using HtmlAgilityPack;
 using ProxySeeker.DataTypes;
 using ProxySeeker.Utilities;
 using System.Text.RegularExpressions;
+using System.Web.UI;
 
 namespace ProxySeeker
 {
@@ -39,10 +40,10 @@ namespace ProxySeeker
         private static readonly object _dieLocker = new object();
         private static readonly object _finishProxyManagerLocker = new object();
         private string _savePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"ProxySeeker\");
-        private string _systemIniFile = Environment.CurrentDirectory + "\\system.ini";
-        private string _dbLocation = Environment.CurrentDirectory + "\\locations.txt";
-        private string _testFile = Environment.CurrentDirectory + "\\test.txt";
-
+        private string _systemIniFile = Environment.CurrentDirectory + "\\system.ini";        
+        private string _sourcesFile = Environment.CurrentDirectory + "\\sources.txt";
+        static string _statsFile = Environment.CurrentDirectory + "\\proxy_stats.html";
+        
         private long wNumber = 16777216;
         private long xNumber = 65536;
         private long yNumber = 256;
@@ -107,152 +108,10 @@ namespace ProxySeeker
 
         private static readonly object _dequeueLocker = new object();
         private static readonly object _enqueueLocker = new object();
-        private static readonly object _finishLocker = new object();
-        private string _googleTestServer = "https://www.google.com/search?btnG=1&filter=0&start=0&q=jack+the+ripper";
-
-        private List<IpGeoLocation> _locations = new List<IpGeoLocation>();
+        private static readonly object _finishLocker = new object();        
+        
         private Queue<string> _cloneProxyFeeder = new Queue<string>();
-        public List<string> _publicProxyFeeder =
-            new List<string>
-            {
-                "http://aliveproxy.com/high-anonymity-proxy-list/",
-                "http://aliveproxy.com/us-proxy-list/",
-                "http://aliveproxy.com/ru-proxy-list/",
-                "http://aliveproxy.com/jp-proxy-list/",
-                "http://aliveproxy.com/ca-proxy-list/",
-                "http://aliveproxy.com/fr-proxy-list/",
-                "http://aliveproxy.com/gb-proxy-list/",
-                "http://aliveproxy.com/de-proxy-list/",
-                "http://aliveproxy.com/anonymous-proxy-list/",
-                "http://aliveproxy.com/transparent-proxy-list/",
-                "http://checkerproxy.net/all_proxy",
-                "http://www.cool-tests.com/Azerbaijan-proxy.php",
-                "http://www.cool-tests.com/Albania-proxy.php",
-                "http://www.cool-tests.com/Algeria-proxy.php",
-                "http://www.cool-tests.com/United-States-proxy.php",
-                "http://www.cool-tests.com/United-Kingdom-proxy.php",
-                "http://www.cool-tests.com/Netherlands-Antilles-proxy.php",
-                "http://www.cool-tests.com/United-Arab-Emirates-proxy.php",
-                "http://www.cool-tests.com/Argentina-proxy.php",
-                "http://www.cool-tests.com/South-Africa-proxy.php",
-                "http://www.cool-tests.com/Bangladesh-proxy.php",
-                "http://www.cool-tests.com/Belarus-proxy.php",
-                "http://www.cool-tests.com/Belgium-proxy.php",
-                "http://www.cool-tests.com/Bulgaria-proxy.php",
-                "http://www.cool-tests.com/Brazil-proxy.php",
-                "http://www.cool-tests.com/Hungary-proxy.php",
-                "http://www.cool-tests.com/Venezuela-proxy.php",
-                "http://www.cool-tests.com/VietNam-proxy.php",
-                "http://www.cool-tests.com/Ghana-proxy.php",
-                "http://www.cool-tests.com/Guatemala-proxy.php",
-                "http://www.cool-tests.com/Germany-proxy.php",
-                "http://www.cool-tests.com/Netherlands-proxy.php",
-                "http://www.cool-tests.com/Hong-Kong-proxy.php",
-                "http://www.cool-tests.com/Honduras-proxy.php",
-                "http://www.cool-tests.com/Greece-proxy.php",
-                "http://www.cool-tests.com/Georgia-proxy.php",
-                "http://www.cool-tests.com/Denmark-proxy.php",
-                "http://www.cool-tests.com/Europe-proxy.php",
-                "http://www.cool-tests.com/Egypt-proxy.php",
-                "http://www.cool-tests.com/Israel-proxy.php",
-                "http://www.cool-tests.com/India-proxy.php",
-                "http://www.cool-tests.com/Indonesia-proxy.php",
-                "http://www.cool-tests.com/Iraq-proxy.php",
-                "http://www.cool-tests.com/Iran-proxy.php",
-                "http://www.cool-tests.com/Ireland-proxy.php",
-                "http://www.cool-tests.com/Spain-proxy.php",
-                "http://www.cool-tests.com/Italy-proxy.php",
-                "http://www.cool-tests.com/Kazakhstan-proxy.php",
-                "http://www.cool-tests.com/Cambodia-proxy.php",
-                "http://www.cool-tests.com/Canada-proxy.php",
-                "http://www.cool-tests.com/Kenya-proxy.php",
-                "http://www.cool-tests.com/China-proxy.php",
-                "http://www.cool-tests.com/Colombia-proxy.php",
-                "http://www.cool-tests.com/Costa-Rica-proxy.php",
-                "http://www.cool-tests.com/Latvia-proxy.php",
-                "http://www.cool-tests.com/Lebanon-proxy.php",
-                "http://www.cool-tests.com/Lithuania-proxy.php",
-                "http://www.cool-tests.com/Luxembourg-proxy.php",
-                "http://www.cool-tests.com/Macedonia-proxy.php",
-                "http://www.cool-tests.com/Malaysia-proxy.php",
-                "http://www.cool-tests.com/Maldives-proxy.php",
-                "http://www.cool-tests.com/Mexico-proxy.php",
-                "http://www.cool-tests.com/Moldova-proxy.php",
-                "http://www.cool-tests.com/Mongolia-proxy.php",
-                "http://www.cool-tests.com/Myanmar-proxy.php",
-                "http://www.cool-tests.com/Nepal-proxy.php",
-                "http://www.cool-tests.com/Nigeria-proxy.php",
-                "http://www.cool-tests.com/New-Zealand-proxy.php",
-                "http://www.cool-tests.com/Pakistan-proxy.php",
-                "http://www.cool-tests.com/Paraguay-proxy.php",
-                "http://www.cool-tests.com/Peru-proxy.php",
-                "http://www.cool-tests.com/Poland-proxy.php",
-                "http://www.cool-tests.com/Romania-proxy.php",
-                "http://www.cool-tests.com/Russian-Federation-proxy.php",
-                "http://www.cool-tests.com/El-Salvador-proxy.php",
-                "http://www.cool-tests.com/Saudi-Arabia-proxy.php",
-                "http://www.cool-tests.com/Serbia-proxy.php",
-                "http://www.cool-tests.com/Slovakia-proxy.php",
-                "http://www.cool-tests.com/Slovenia-proxy.php",
-                "http://www.cool-tests.com/Thailand-proxy.php",
-                "http://www.cool-tests.com/Taiwan-proxy.php",
-                "http://www.cool-tests.com/Tanzania-proxy.php",
-                "http://www.cool-tests.com/Turkey-proxy.php",
-                "http://www.cool-tests.com/Uzbekistan-proxy.php",
-                "http://www.cool-tests.com/Ukraine-proxy.php",
-                "http://www.cool-tests.com/Philippines-proxy.php",
-                "http://www.cool-tests.com/Finland-proxy.php",
-                "http://www.cool-tests.com/France-proxy.php",
-                "http://www.cool-tests.com/Croatia-proxy.php",
-                "http://www.cool-tests.com/Chile-proxy.php",
-                "http://www.cool-tests.com/Sweden-proxy.php",
-                "http://www.cool-tests.com/Switzerland-proxy.php",
-                "http://www.cool-tests.com/Ecuador-proxy.php",
-                "http://www.cool-tests.com/South-Korea-proxy.php",
-                "http://www.cool-tests.com/Japan-proxy.php",
-                //"http://fineproxy.org/",
-                //"http://www.getproxy.jp/",
-                //"http://www.getproxy.jp/default/2",
-                //"http://www.getproxy.jp/default/3",
-                //"http://www.getproxy.jp/default/4",
-                //"http://www.getproxy.jp/default/5",
-                //"http://www.google-proxy.net/",
-                //"http://www.hotvpn.com/ru/proxies/",
-                //"http://www.hotvpn.com/proxies/2/",
-                //"http://www.hotvpn.com/proxies/3/",
-                //"http://www.hotvpn.com/proxies/4/",
-                //"http://www.hotvpn.com/proxies/5/",
-                //"http://letushide.com/protocol/https/list_of_free_HTTPS_proxy_servers",
-                //"http://letushide.com/protocol/https/2/list_of_free_HTTPS_proxy_servers",
-                //"http://letushide.com/protocol/https/3/list_of_free_HTTPS_proxy_servers",
-                //"http://letushide.com/protocol/https/4/list_of_free_HTTPS_proxy_servers",
-                //"http://letushide.com/protocol/https/5/list_of_free_HTTPS_proxy_servers",
-                //"http://letushide.com/protocol/socks/",
-                //"http://letushide.com/protocol/socks/2/list_of_free_SOCKS_proxy_servers",
-                //"http://letushide.com/protocol/http/",
-                //"http://letushide.com/protocol/http/2/list_of_free_HTTP_proxy_servers",
-                //"http://letushide.com/protocol/http/3/list_of_free_HTTP_proxy_servers",
-                //"http://letushide.com/protocol/http/4/list_of_free_HTTP_proxy_servers",
-                //"http://letushide.com/protocol/http/5/list_of_free_HTTP_proxy_servers",
-                //"http://notan.h1.ru/hack/xwww/proxy1.html",
-                //"http://notan.h1.ru/hack/xwww/proxy2.html",
-                //"http://notan.h1.ru/hack/xwww/proxy3.html",
-                //"http://proxylist.sakura.ne.jp/index.htm?pages=0",
-                //"http://proxylist.sakura.ne.jp/index.htm?pages=1",
-                //"http://proxylist.sakura.ne.jp/index.htm?pages=2",
-                //"http://nntime.com/",
-                //"http://nntime.com/proxy-list-02.htm",
-                //"http://nntime.com/proxy-list-03.htm",
-                //"http://txt.proxyspy.net/proxy.txt",
-                //"http://www.rmccurdy.com/scripts/proxy/good.txt",
-                //"http://proxy-ip-list.com/download/free-proxy-list.txt",
-                //"http://www.shroomery.org/ythan/proxylist.php/RK=0",
-                //"http://50na50.net/no_anonim_http.txt",
-                //"http://www.romantic-collection.net/proxy.txt",
-                //"http://vmarte.com/proxy/proxy_all.txt",
-                //"http://reptv.ru/shy/proxylist.txt",
-                //"http://pozitiv.3owl.com/proxy.txt"
-            };
+        private ProxySourceCollection _sources = new ProxySourceCollection();
 
         private bool _isTesting;
 
@@ -298,7 +157,6 @@ namespace ProxySeeker
 
         private int _finishWorker;
         private int _finishFounder;
-        private int _finishScraper;
 
         //for interactions with main window
         private Window _currentWD;
@@ -371,9 +229,9 @@ namespace ProxySeeker
             {
                 LoadSettings();
             }
-            if (System.IO.File.Exists(_dbLocation))
+            if(System.IO.File.Exists(_sourcesFile))
             {
-                LoadDBLocation();
+                LoadSources();
             }
 
             CreateWakeUpSchedule();
@@ -409,18 +267,14 @@ namespace ProxySeeker
             _timeOut = Convert.ToInt32(IniHelper.GetIniFileString(_systemIniFile, "proxy", "timeout", _defaultValue));
         }
 
-        /// <summary>
-        /// Load DBLocation
-        /// </summary>
-        private void LoadDBLocation()
+        private void LoadSources()
         {
-            using (StreamReader reader = new StreamReader(_dbLocation))
+            using (StreamReader reader = new StreamReader(_sourcesFile, Encoding.UTF8))
             {
-                String line;
+                string line = "";
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] content = line.Split('|');
-                    _locations.Add(new IpGeoLocation(Convert.ToInt64(content[0]), Convert.ToInt64(content[1]), content[2], content[3]));
+                    _sources.Sources.Add(new ProxySource(line));
                 }
             }
         }
@@ -552,6 +406,7 @@ namespace ProxySeeker
             {
                 ApplicationMessageHandler.Instance.AddMessage("Finish testing proxies. Found  " + _alive.Count + " alive proxies.");
                 UpdateProxies();
+                WriteStatistics();
                 _isTesting = false;
                 _finishWorker = 0;
             }
@@ -604,12 +459,25 @@ namespace ProxySeeker
                             IProxyScraper pScraper = ProxyScraperFactory.GetProxyScraper(link);
                             List<SystemProxy> proxies = pScraper.GetProxies(document, link);
 
-                            lock (_enqueueLocker)
+                            if (proxies.Count > 0)
                             {
-                                PrepareTestProxies(proxies);
                                 ApplicationMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
+                                lock (_enqueueLocker)
+                                {
+                                    _sources.ChangeFounded(link, proxies.Count);
+                                    PrepareTestProxies(proxies, link);
+                                }
                             }
-                            IsDownload = true;                            
+                            else
+                            {
+                                ApplicationMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
+                                lock (_enqueueLocker)
+                                {
+                                    _sources.ChangeFounded(link, 0);
+                                    _sources.ChangeAdded(link, 0);
+                                }
+                            }
+                            IsDownload = true;
                         }
                     }
                     catch (Exception)
@@ -620,6 +488,11 @@ namespace ProxySeeker
                     if (!IsDownload)
                     {
                         ApplicationMessageHandler.Instance.AddMessage("Cannot find any proxy at " + link + "!");
+                        lock (_enqueueLocker)
+                        {
+                            _sources.ChangeFounded(link, 0);
+                            _sources.ChangeAdded(link, 0);
+                        }
                     }
                 }
 
@@ -645,7 +518,6 @@ namespace ProxySeeker
                     IsScraping = false;
                     UpdateProxies(_foundProxies);
                     CreateTestList();
-                    WriteFile();
                     //invoke textboxes here
                     Total = _publicProxies.Count;
                     _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, Total));
@@ -662,8 +534,7 @@ namespace ProxySeeker
                     ApplicationMessageHandler.Instance.AddMessage("Found  " + _foundProxies.Count + " proxies.");
                     IsScraping = false;
                     UpdateProxies(_foundProxies);
-                    CreateTestList();
-                    WriteFile();
+                    CreateTestList();                    
                     //invoke textboxes here
                     Total = _publicProxies.Count;
                     _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, Total));
@@ -831,9 +702,9 @@ namespace ProxySeeker
         private void CloneProxyFeeder()
         {
             _cloneProxyFeeder.Clear();
-            foreach (var feed in _publicProxyFeeder)
+            foreach (var source in _sources.Sources)
             {
-                _cloneProxyFeeder.Enqueue(feed);
+                _cloneProxyFeeder.Enqueue(source.SourceUrl);
             }
         }
 
@@ -841,10 +712,20 @@ namespace ProxySeeker
         /// Prepare test queue
         /// </summary>
         /// <param name="proxies"></param>
-        private void PrepareTestProxies(List<SystemProxy> proxies)
+        private void PrepareTestProxies(List<SystemProxy> proxies, string link)
         {
+            int success = 0;
             foreach (var proxy in proxies)
-                _foundProxies.Enqueue(proxy);
+            {
+                Match match = Regex.Match(proxy.ProxyIp + ":" + proxy.ProxyPort, proxyPattern);
+                if (match.Success)
+                {
+                    success++;
+                    _foundProxies.Enqueue(proxy);
+                    _sources.AddProxyToSource(link, proxy);
+                }
+            }
+            _sources.ChangeAdded(link, success);
         }
 
         /// <summary>
@@ -857,6 +738,10 @@ namespace ProxySeeker
                 _publicProxies.Clear();
                 foreach (var i in _alive)
                 {
+                    if (_checkAnonymous)
+                        _sources.ChangeAnonymous(i);
+                    else
+                        _sources.ChangeWorking(i);
                     _publicProxies.Enqueue(i);
                 }
                 _alive = new List<SystemProxy>();                               
@@ -874,9 +759,7 @@ namespace ProxySeeker
                 _publicProxies.Clear();
                 foreach (var i in proxies)
                 {
-                    Match match = Regex.Match(i.ProxyIp + ":" + i.ProxyPort, proxyPattern);
-                    if(match.Success)
-                        _publicProxies.Enqueue(i);
+                    _publicProxies.Enqueue(i);
                 }
             }
         }        
@@ -913,7 +796,7 @@ namespace ProxySeeker
         /// <param name="proxy"></param>
         private void FilterProxies(SystemProxy proxy)
         {
-            _alive.Add(proxy);
+            _alive.Add(proxy);            
             _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(_alive.Count, _foundProxies.Count));                
         }
 
@@ -959,46 +842,230 @@ namespace ProxySeeker
         }
 
         /// <summary>
-        /// Update founded Proxy's information
+        /// Write proxy source's statistic
         /// </summary>
-        /// <param name="pQueue"></param>
-        private void UpdateProxyQueueInformation(ref Queue<SystemProxy> pQueue)
+        private void WriteStatistics()
         {
-            foreach(SystemProxy proxy in pQueue)
+            StringWriter stringWriter = new StringWriter();
+
+            using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter, string.Empty))
             {
-                proxy.Speed = -1;
-                proxy.CountryCode = LocateProxyIpAddress(proxy.ProxyIp);
-            }
-        }
+                writer.WriteLineNoTabs("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
+                writer.AddAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+                writer.AddAttribute("xml:lang", "en");
 
-        /// <summary>
-        /// Locate proxy
-        /// </summary>
-        /// <param name="ipAddress"></param>
-        /// <returns></returns>
-        private string LocateProxyIpAddress(string ipAddress)
-        {
-            string[] content = ipAddress.Split('.');
+                writer.RenderBeginTag(HtmlTextWriterTag.Html);
+                writer.RenderBeginTag(HtmlTextWriterTag.Head);
 
-            long proxyValue = wNumber * Convert.ToInt32(content[0]) + yNumber * Convert.ToInt32(content[1]) + xNumber * Convert.ToInt32(content[2]) + Convert.ToInt32(content[3]);
+                writer.RenderBeginTag(HtmlTextWriterTag.Title);
+                writer.Write("HTTP proxies resources");
+                writer.RenderEndTag(); // end title
 
-            foreach (var location in _locations)
-            {
-                if (proxyValue >= location.minThreshold && proxyValue <= location.maxThreshold)
-                    return location.countryCode;
-            }
+                writer.RenderEndTag(); // end head
 
-            return "N/A";
-        }
+                writer.WriteLine("");
+                writer.RenderBeginTag(HtmlTextWriterTag.Body);
 
-        private void WriteFile()
-        {
-            using (StreamWriter writer = new StreamWriter(_testFile, false))
-            {
-                foreach (var i in _publicProxies)
+                writer.AddAttribute("align", "center");
+                writer.RenderBeginTag(HtmlTextWriterTag.Div);
+
+                writer.RenderBeginTag(HtmlTextWriterTag.P);
+                writer.RenderBeginTag(HtmlTextWriterTag.Strong);
+                writer.AddAttribute("size", "4");
+                writer.RenderBeginTag(HtmlTextWriterTag.Font);
+                writer.Write("HTTP proxies resources");
+                writer.RenderEndTag(); //end font
+                writer.RenderEndTag(); //end strong
+                writer.RenderEndTag(); //end p
+                writer.WriteLine("");
+                writer.RenderBeginTag(HtmlTextWriterTag.P);
+                writer.RenderBeginTag(HtmlTextWriterTag.I);
+                writer.Write("Updated &nbsp;");
+                writer.RenderEndTag(); //end i
+                writer.Write(DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss tt"));
+                writer.RenderEndTag(); //end p
+
+                writer.RenderEndTag(); //end div
+
+                //write table here
+                writer.AddAttribute("width", "80%");
+                writer.AddAttribute("align", "center");
+                writer.AddAttribute("border", "0");
+                writer.AddAttribute("cellspacing", "0");
+                writer.AddAttribute("cellpadding", "1");
+
+                writer.RenderBeginTag(HtmlTextWriterTag.Table);
+
+                //write header row
+                writer.AddAttribute("bgcolor", "#86a4d7");
+                writer.RenderBeginTag(HtmlTextWriterTag.Tr); //begin header row
+
+                writer.AddAttribute("width", "50");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 1st td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("&nbsp;N");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 1st td
+
+                writer.WriteLine("");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 2nd td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("URL");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 2nd td
+
+                writer.WriteLine("");
+                writer.AddAttribute("width", "100");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 3rd td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("Founded");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 3rd td
+
+                writer.WriteLine("");
+                writer.AddAttribute("width", "100");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 4th td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("Added");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 4th td
+
+                writer.WriteLine("");
+                writer.AddAttribute("width", "100");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 5th td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("Working");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 5th td
+
+                writer.WriteLine("");
+                writer.AddAttribute("width", "100");
+                writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 6th td
+                writer.RenderBeginTag(HtmlTextWriterTag.B);
+                writer.Write("Anonymous");
+                writer.RenderEndTag(); //end b
+                writer.RenderEndTag(); //end 6th td
+
+                writer.RenderEndTag(); //end table header row
+
+                int count = 1;
+                //write rows value
+                foreach (var source in _sources.Sources)
                 {
-                    writer.WriteLine(i.ToString());
+                    if (count < _sources.Sources.Count)
+                    {
+                        if (count % 2 == 0)
+                            writer.AddAttribute("bgcolor", "#eeeef8");
+                        else
+                            writer.AddAttribute("bgcolor", "#ffffff");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Tr);
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("style", "BORDER-LEFT: #86a4d7 2px solid;  PADDING-LEFT: 5px;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 1st td                   
+                        writer.Write(count);
+                        writer.RenderEndTag(); //end 1st td
+
+                        writer.WriteLine("");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 2nd td
+                        writer.AddAttribute("href", source.SourceUrl);
+                        writer.AddAttribute("target", "_blank");
+                        writer.RenderBeginTag(HtmlTextWriterTag.A);
+                        writer.Write(source.SourceUrl);
+                        writer.RenderEndTag(); //end anchor
+                        writer.RenderEndTag(); //end 2nd td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 3rd td
+                        writer.Write(source.Founded);
+                        writer.RenderEndTag(); //end 3rd td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 4th td
+                        writer.Write("+" + source.Added);
+                        writer.RenderEndTag(); //end 4th td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 5th td
+                        writer.Write(source.Working);
+                        writer.RenderEndTag(); //end 5th td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("style", "BORDER-RIGHT: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 6th td                   
+                        writer.Write(source.Anonymous);
+                        writer.RenderEndTag(); //end 6th td
+
+                        writer.RenderEndTag(); //end row
+                    }
+                    else
+                    {
+                        if (count % 2 == 0)
+                            writer.AddAttribute("bgcolor", "#eeeef8");
+                        else
+                            writer.AddAttribute("bgcolor", "#ffffff");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Tr);
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("style", "BORDER-LEFT: #86a4d7 2px solid;  PADDING-LEFT: 5px;BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 1st td                   
+                        writer.Write(count);
+                        writer.RenderEndTag(); //end 1st td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("style", "BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 2nd td
+                        writer.AddAttribute("href", source.SourceUrl);
+                        writer.AddAttribute("target", "_blank");
+                        writer.RenderBeginTag(HtmlTextWriterTag.A);
+                        writer.Write(source.SourceUrl);
+                        writer.RenderEndTag(); //end anchor
+                        writer.RenderEndTag(); //end 2nd td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.AddAttribute("style", "BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 3rd td
+                        writer.Write(source.Founded);
+                        writer.RenderEndTag(); //end 3rd td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.AddAttribute("style", "BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 4th td
+                        writer.Write("+" + source.Added);
+                        writer.RenderEndTag(); //end 4th td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("width", "100");
+                        writer.AddAttribute("style", "BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 5th td
+                        writer.Write(source.Working);
+                        writer.RenderEndTag(); //end 5th td
+
+                        writer.WriteLine("");
+                        writer.AddAttribute("style", "BORDER-RIGHT: #86a4d7 2px solid;BORDER-BOTTOM: #86a4d7 2px solid;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Td); //begin 6th td                   
+                        writer.Write(source.Anonymous);
+                        writer.RenderEndTag(); //end 6th td
+
+                        writer.RenderEndTag(); //end row
+                    }
+                    count++;
                 }
+
+                writer.RenderEndTag(); //end table
+
+                writer.RenderEndTag(); //end body
+                writer.RenderEndTag(); //end html
+            }
+
+            using (StreamWriter writer = new StreamWriter(_statsFile, false))
+            {
+                writer.Write(stringWriter.ToString());
             }
         }
 
