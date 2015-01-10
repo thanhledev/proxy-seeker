@@ -77,6 +77,9 @@ namespace ProxySeeker
             ckbCheckAnonymous.IsChecked = ProxyHandler.Instance.CheckAnonymous;
             tbAnonymousCheckSite.Text = ProxyHandler.Instance.CheckAnonymousLink;
             tbProxyThread.Text = ProxyHandler.Instance.Threads.ToString();
+            ckbSplitForScraper.IsChecked = ProxyHandler.Instance.SplitForScraper;
+            ckbSplitForPoster.IsChecked = ProxyHandler.Instance.SplitForPoster;
+            ckbSplitForForums.IsChecked = ProxyHandler.Instance.SplitForForums;
 
             int seconds = ProxyHandler.Instance.TimeOut / 1000;
             tbProxyTimeout.Text = seconds.ToString();
@@ -260,7 +263,37 @@ namespace ProxySeeker
         {
             ProxyHandler.Instance.CheckAnonymousLink = tbAnonymousCheckSite.Text;
         }
-                
+
+        /// <summary>
+        /// Handle SplitForScraper checkbox checked/unchecked event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbSplitForScraper_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.SplitForScraper = Convert.ToBoolean(ckbSplitForScraper.IsChecked);
+        }
+
+        /// <summary>
+        /// Handle SplitForPoster checkbox checked/unchecked event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbSplitForPoster_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.SplitForPoster = Convert.ToBoolean(ckbSplitForPoster.IsChecked);
+        }
+
+        /// <summary>
+        /// Handle SplitForForums checkbox checked/unchecked event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ckbSplitForForums_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.SplitForForums = Convert.ToBoolean(ckbSplitForForums.IsChecked);
+        }
+
         /// <summary>
         /// Handle Control button click event
         /// </summary>
@@ -427,6 +460,8 @@ namespace ProxySeeker
         }
 
         #endregion                                       
+
+        
         
     }
 }

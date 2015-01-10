@@ -79,6 +79,7 @@
     </Compile>
     <Compile Include="DataTypes\Collections\ProxySource.cs" />
     <Compile Include="DataTypes\Collections\ProxySourceCollection.cs" />
+    <Compile Include="DataTypes\Collections\SplitProxyCollection.cs" />
     <Compile Include="DataTypes\Enums\AppExitingMessage.cs" />
     <Compile Include="DataTypes\Enums\AppMessage.cs" />
     <Compile Include="DataTypes\Enums\AppState.cs" />

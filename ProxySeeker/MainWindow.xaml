@@ -62,11 +62,14 @@
                     <Label DockPanel.Dock="Right" Content="// Configure" Name="lblConfigure" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpUserWelcome">
+                    <Label>User guide</Label>
+                </DockPanel>
+                <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">                    
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="40" />
-                            
+
                         </Grid.RowDefinitions>
                         <DockPanel Grid.Row="0">
                             <TextBox Name="tbLogs" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Visible" Foreground="#0098c5" FontSize="12" Margin="5,0,5,5" />
@@ -86,9 +89,6 @@
                             </Grid>
                         </DockPanel>
                     </Grid>
-                </DockPanel>
-                <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">
-                    <Label>Working interface Working interface</Label>
                 </DockPanel>
                 <DockPanel Grid.Row="1" Name="dpSettings" Visibility="Hidden">
                     <GroupBox Header="Settings" Padding="0" Margin="5,0,5,5" FontSize="12">
@@ -116,6 +116,11 @@
                             <DockPanel HorizontalAlignment="Left">
                                 <CheckBox Name="ckbCheckAnonymous" Content="Check proxy anonymity?" FontSize="12" Checked="ckbCheckAnonymous_CheckedChanged" Unchecked="ckbCheckAnonymous_CheckedChanged" />
                                 <TextBox Name="tbAnonymousCheckSite" Height="30" Margin="5" Width="300" LostFocus="tbAnonymousCheckSite_LostFocus" />
+                            </DockPanel>
+                            <DockPanel HorizontalAlignment="Left">
+                                <CheckBox Name="ckbSplitForScraper" Content="Split proxies for scraper application?" FontSize="12" Checked="ckbSplitForScraper_CheckedChanged" Unchecked="ckbSplitForScraper_CheckedChanged"  />
+                                <CheckBox Name="ckbSplitForPoster" Content="Split proxies for poster application?" FontSize="12" Checked="ckbSplitForPoster_CheckedChanged" Unchecked="ckbSplitForPoster_CheckedChanged" />
+                                <CheckBox Name="ckbSplitForForums" Content="Split proxies for forums application?" FontSize="12" Checked="ckbSplitForForums_CheckedChanged" Unchecked="ckbSplitForForums_CheckedChanged" />
                             </DockPanel>
                         </StackPanel>
                     </GroupBox>

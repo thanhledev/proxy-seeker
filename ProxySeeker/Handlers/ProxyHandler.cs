@@ -90,6 +90,30 @@ namespace ProxySeeker
             set { _checkAnonymousLink = value; }
         }
 
+        private bool _splitForScraper;
+
+        public bool SplitForScraper
+        {
+            get { return _splitForScraper; }
+            set { _splitForScraper = value; }
+        }
+
+        private bool _splitForPoster;
+
+        public bool SplitForPoster
+        {
+            get { return _splitForPoster; }
+            set { _splitForPoster = value; }
+        }
+
+        private bool _splitForForums;
+
+        public bool SplitForForums
+        {
+            get { return _splitForForums; }
+            set { _splitForForums = value; }
+        }
+
         private int _threads;
 
         public int Threads
@@ -112,7 +136,7 @@ namespace ProxySeeker
         
         private Queue<string> _cloneProxyFeeder = new Queue<string>();
         private ProxySourceCollection _sources = new ProxySourceCollection();
-
+        private SplitProxyCollection _split = new SplitProxyCollection();
         private bool _isTesting;
 
         public bool IsTesting
@@ -133,7 +157,9 @@ namespace ProxySeeker
         private Thread[] _founder = new Thread[10];
 
         private Thread _proxyManager;
+        private Thread _writer;
         private bool _stopManager = false;
+        private bool _stopWriter = false;
 
         public int Total;
         private List<SystemProxy> _alive;
@@ -225,6 +251,11 @@ namespace ProxySeeker
             _finishWorker = 0;
             _finishFounder = 0;
 
+            if (!System.IO.Directory.Exists(_savePath))
+            {
+                System.IO.Directory.CreateDirectory(_savePath);
+            }
+
             if (System.IO.File.Exists(_systemIniFile))
             {
                 LoadSettings();
@@ -237,6 +268,9 @@ namespace ProxySeeker
             CreateWakeUpSchedule();
             _proxyManager = new Thread(proxyManager_DoWork);
             _proxyManager.IsBackground = true;
+
+            _writer = new Thread(WriteProxyToFile);
+            _writer.IsBackground = true;
 
             //if (_autoSearchProxy)
             //{
@@ -265,6 +299,9 @@ namespace ProxySeeker
             _checkAnonymousLink = IniHelper.GetIniFileString(_systemIniFile, "proxy", "checkanonymouslink", _defaultValue);
             _threads = Convert.ToInt32(IniHelper.GetIniFileString(_systemIniFile, "proxy", "threads", _defaultValue));
             _timeOut = Convert.ToInt32(IniHelper.GetIniFileString(_systemIniFile, "proxy", "timeout", _defaultValue));
+            _splitForScraper = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitforscraper", _defaultValue));
+            _splitForPoster = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitforposter", _defaultValue));
+            _splitForForums = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitForForums", _defaultValue));
         }
 
         private void LoadSources()
@@ -293,6 +330,9 @@ namespace ProxySeeker
             IniHelper.WriteKey(_systemIniFile, "proxy", "checkanonymouslink", _checkAnonymousLink.ToString());
             IniHelper.WriteKey(_systemIniFile, "proxy", "threads", _threads.ToString());
             IniHelper.WriteKey(_systemIniFile, "proxy", "timeout", _timeOut.ToString());
+            IniHelper.WriteKey(_systemIniFile, "proxy", "splitforscraper", _splitForScraper.ToString());
+            IniHelper.WriteKey(_systemIniFile, "proxy", "splitforposter", _splitForPoster.ToString());
+            IniHelper.WriteKey(_systemIniFile, "proxy", "splitforforums", _splitForForums.ToString());
         }        
 
         #endregion
@@ -407,6 +447,7 @@ namespace ProxySeeker
                 ApplicationMessageHandler.Instance.AddMessage("Finish testing proxies. Found  " + _alive.Count + " alive proxies.");
                 UpdateProxies();
                 WriteStatistics();
+                SplitProxies();
                 _isTesting = false;
                 _finishWorker = 0;
             }
@@ -1067,6 +1108,175 @@ namespace ProxySeeker
             {
                 writer.Write(stringWriter.ToString());
             }
+        }
+
+        /// <summary>
+        /// Split proxies and write to appdata folder
+        /// </summary>
+        private void SplitProxies()
+        {
+            int splitNumber = 0;
+
+            if (_splitForScraper)
+                splitNumber++;
+            if (_splitForPoster)
+                splitNumber++;
+            if (_splitForForums)
+                splitNumber++;
+
+            if (splitNumber > 0)
+            {
+                if (splitNumber == 1)
+                {
+                    if (_splitForScraper)
+                    {
+                        _split.SplitForScraper = true;
+                        _split._scraperProxies = _publicProxies.ToList();
+                    }
+
+                    if (_splitForPoster)
+                    {
+                        _split.SplitForPoster = true;
+                        _split._posterProxies = _publicProxies.ToList();
+                    }
+
+                    if (_splitForForums)
+                    {
+                        _split.SplitForForums = true;
+                        _split._forumsProxies = _publicProxies.ToList();
+                    }
+                }
+                else
+                {
+                    int take = _publicProxies.Count / splitNumber;
+
+                    int index = 0;
+
+                    if (_splitForScraper)
+                    {
+                        _split.SplitForScraper = true;
+                        _split._scraperProxies = _publicProxies.ToList().Skip(index).Take(take).ToList();
+                        index++;
+                    }
+
+                    if (_splitForPoster)
+                    {
+                        _split.SplitForPoster = true;
+                        _split._posterProxies = _publicProxies.ToList().Skip(index).Take(take).ToList();
+                        index++;
+                    }
+
+                    if (_splitForForums)
+                    {
+                        _split.SplitForForums = true;
+                        _split._forumsProxies = _publicProxies.ToList().Skip(index).Take(take).ToList();
+                        index++;
+                    }
+                }
+            }
+
+            _writer.Start();
+        }
+
+
+        private void WriteProxyToFile()
+        {
+            bool isWritten = false;
+
+            if(_split.SplitForScraper)
+            {
+                do
+                {
+                    try
+                    {
+                        using (FileStream scraperStream = new FileStream(_savePath + "scraper.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            using (StreamWriter scraperWriter = new StreamWriter(scraperStream,Encoding.UTF8))
+                            {
+                                foreach (var proxy in _split._scraperProxies)
+                                    scraperWriter.WriteLine(proxy.ToString());
+                            }
+                        }
+                        isWritten = true;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                } while (!isWritten);
+            }
+
+            isWritten = false;
+
+            if (_split.SplitForPoster)
+            {
+                do
+                {
+                    try
+                    {
+                        using (FileStream posterStream = new FileStream(_savePath + "poster.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            using (StreamWriter posterWriter = new StreamWriter(posterStream, Encoding.UTF8))
+                            {
+                                foreach (var proxy in _split._posterProxies)
+                                    posterWriter.WriteLine(proxy.ToString());
+                            }
+                        }
+                        isWritten = true;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                } while (!isWritten);
+            }
+
+            isWritten = false;
+
+            if (_split.SplitForForums)
+            {
+                do
+                {
+                    try
+                    {
+                        using (FileStream forumsStream = new FileStream(_savePath + "forums.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            using (StreamWriter forumsWriter = new StreamWriter(forumsStream, Encoding.UTF8))
+                            {
+                                foreach (var proxy in _split._forumsProxies)
+                                    forumsWriter.WriteLine(proxy.ToString());
+                            }
+                        }
+                        isWritten = true;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                } while (!isWritten);
+            }
+
+            isWritten = false;
+
+            do
+            {
+                try
+                {
+                    using (FileStream statsStream = new FileStream(_savePath + "stats.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        using (StreamWriter statsWriter = new StreamWriter(statsStream, Encoding.UTF8))
+                        {
+                            statsWriter.Write(DateTime.Now.ToString());
+                        }
+                    }
+                    isWritten = true;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(1000);
+                }
+
+            } while (!isWritten);
         }
 
         #endregion        
