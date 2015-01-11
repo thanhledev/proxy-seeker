@@ -167,7 +167,9 @@ namespace ProxySeeker
             updateRamStatistic = updateTextBox;
 
             _cpuWatcher = new Thread(MonitoringCpuUsage);
+            _cpuWatcher.IsBackground = true;
             _ramWatcher = new Thread(MonitoringRamUsage);
+            _ramWatcher.IsBackground = true;
         }
 
         /// <summary>

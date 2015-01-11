@@ -460,8 +460,6 @@ namespace ProxySeeker
         }
 
         #endregion                                       
-
-        
-        
+                
     }
 }

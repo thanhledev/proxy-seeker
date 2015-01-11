@@ -61,10 +61,10 @@
                     <Label DockPanel.Dock="Left" Content="// Seeking" Name="lblSeeking" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
                     <Label DockPanel.Dock="Right" Content="// Configure" Name="lblConfigure" Style="{StaticResource MainLabelStyle}" MouseLeftButtonUp="MainLabel_Click" />
                 </DockPanel>
-                <DockPanel Grid.Row="1" Name="dpUserWelcome">
+                <DockPanel Grid.Row="1" Name="dpUserWelcome" Visibility="Hidden">
                     <Label>User guide</Label>
                 </DockPanel>
-                <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Hidden">                    
+                <DockPanel Grid.Row="1" Name="dpWorking" Visibility="Visible">                    
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
