@@ -21,10 +21,7 @@ namespace ProxySeeker
         /// </summary>
         private static ApplicationHandler _instance = null;
         private static readonly object _instanceLocker = new object();
-        private static readonly object _loadingLocker = new object();               
-
-        //system token
-        private static string _defaultValue = "???";
+        private static readonly object _loadingLocker = new object();
 
         //software information
         private string _applicationName;

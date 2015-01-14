@@ -34,7 +34,7 @@ namespace ProxySeeker
         private static ProxyHandler _instance = null;
         private static readonly object _instanceLocker = new object();
         private static readonly object _loadingLocker = new object();
-        private static readonly object _usingLocker = new object();
+        private static readonly object _usingPublicLocker = new object();
         private static readonly object _foundLocker = new object();
         private static readonly object _stopLocker = new object();
         private static readonly object _dieLocker = new object();
@@ -42,11 +42,9 @@ namespace ProxySeeker
         private string _savePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"ProxySeeker\");
         private string _systemIniFile = Environment.CurrentDirectory + "\\system.ini";        
         private string _sourcesFile = Environment.CurrentDirectory + "\\sources.txt";
+        private string _privateFile = Environment.CurrentDirectory + "\\xprivate.txt";
         static string _statsFile = Environment.CurrentDirectory + "\\proxy_stats.html";
-        
-        private long wNumber = 16777216;
-        private long xNumber = 65536;
-        private long yNumber = 256;
+               
         private string proxyPattern = @"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b:\d{2,5}";
         //for working variables
         private static string _defaultValue = "???";
@@ -130,19 +128,20 @@ namespace ProxySeeker
             set { _timeOut = value; }
         }
 
-        private static readonly object _dequeueLocker = new object();
-        private static readonly object _enqueueLocker = new object();
-        private static readonly object _finishLocker = new object();        
+        private static readonly object _dequeuePublicLocker = new object();
+        private static readonly object _enqueuePublicLocker = new object();
+        private static readonly object _finishPublicLocker = new object();        
         
         private Queue<string> _cloneProxyFeeder = new Queue<string>();
         private ProxySourceCollection _sources = new ProxySourceCollection();
         private SplitProxyCollection _split = new SplitProxyCollection();
-        private bool _isTesting;
 
-        public bool IsTesting
+        private bool _isPublicTesting;
+
+        public bool IsPublicTesting
         {
-            get { return _isTesting; }
-            internal set { _isTesting = value; }
+            get { return _isPublicTesting; }
+            internal set { _isPublicTesting = value; }
         }
 
         private bool _isScraping;
@@ -153,36 +152,75 @@ namespace ProxySeeker
             internal set { _isScraping = value; }
         }
 
+        private bool _isPrivateTesting;
+
+        public bool IsPrivateTesting
+        {
+            get { return _isPrivateTesting; }
+            set { _isPrivateTesting = value; }
+        }
+
         private Thread[] _tester = new Thread[500];
         private Thread[] _founder = new Thread[10];
 
         private Thread _proxyManager;
-        private Thread _writer;
+        private Thread _publicWriter;
+        private Thread _privateWriter;
         private bool _stopManager = false;
         private bool _stopWriter = false;
 
         public int Total;
-        private List<SystemProxy> _alive;
+
+        private List<SystemProxy> _alivePublic;
+
+        public List<SystemProxy> AlivePublic
+        {
+            get { return _alivePublic; }
+        }
+
         private Queue<SystemProxy> _testList = new Queue<SystemProxy>();
         private Queue<SystemProxy> _foundProxies = new Queue<SystemProxy>();
         private Queue<DateTime> _wakeUpPoint = new Queue<DateTime>();
 
         private int _death = 0;
 
-        public List<SystemProxy> Alive
-        {
-            get { return _alive; }
-        }
+        
 
         private Queue<SystemProxy> _publicProxies = new Queue<SystemProxy>();
 
         public Queue<SystemProxy> PublicProxies
         {
             get { return _publicProxies; }
-        }
+        }        
 
         private int _finishWorker;
         private int _finishFounder;
+
+        //for private proxy
+
+        private Thread[] _privateTester = new Thread[30];
+
+        private List<SystemProxy> _alivePrivate;
+
+        public List<SystemProxy> AlivePrivate
+        {
+            get { return _alivePrivate; }
+        }
+
+        private Queue<SystemProxy> _privateTestList = new Queue<SystemProxy>();
+        private Queue<SystemProxy> _privateProxies = new Queue<SystemProxy>();
+
+        public Queue<SystemProxy> PrivateProxies
+        {
+            get { return _privateProxies; }
+        }
+
+        private int _finishPrivateWorker;
+        private int _totalPrivateWorker = 30;
+        private static readonly object _usingPrivateLocker = new object();
+        private static readonly object _dequeuePrivateLocker = new object();
+        private static readonly object _enqueuePrivateLocker = new object();
+        private static readonly object _finishPrivateLocker = new object();
 
         //for interactions with main window
         private Window _currentWD;
@@ -217,6 +255,22 @@ namespace ProxySeeker
             set { _deathNumber = value; }
         }
 
+        private TextBox _totalPrivateNumber = new TextBox();
+
+        public TextBox TotalPrivateNumber
+        {
+            get { return _totalPrivateNumber; }
+            set { _totalPrivateNumber = value; }
+        }
+
+        private TextBox _alivePrivateNumber = new TextBox();
+
+        public TextBox AlivePrivateNumber
+        {
+            get { return _alivePrivateNumber; }
+            set { _alivePrivateNumber = value; }
+        }
+
         private Action<Window, TextBox, string> _updateNumber;        
         public bool isLoadingCompleted = false;
 
@@ -245,17 +299,19 @@ namespace ProxySeeker
                 isLoadingCompleted = false;
 
             Total = 0;
-            _isTesting = false;
+            _isPublicTesting = false;
+            _isPrivateTesting = false;
             _isScraping = false;
-            _alive = new List<SystemProxy>();
+            _alivePublic = new List<SystemProxy>();
+            _alivePrivate = new List<SystemProxy>();
             _finishWorker = 0;
+            _finishPrivateWorker = 0;
             _finishFounder = 0;
 
             if (!System.IO.Directory.Exists(_savePath))
             {
                 System.IO.Directory.CreateDirectory(_savePath);
             }
-
             if (System.IO.File.Exists(_systemIniFile))
             {
                 LoadSettings();
@@ -264,13 +320,20 @@ namespace ProxySeeker
             {
                 LoadSources();
             }
+            if (System.IO.File.Exists(_privateFile))
+            {
+                LoadPrivateProxies();
+            }
 
             CreateWakeUpSchedule();
             _proxyManager = new Thread(proxyManager_DoWork);
             _proxyManager.IsBackground = true;
 
-            _writer = new Thread(WriteProxyToFile);
-            _writer.IsBackground = true;
+            _publicWriter = new Thread(WritePublicProxyToFile);
+            _publicWriter.IsBackground = true;
+
+            _privateWriter = new Thread(WritePrivateProxyToFile);
+            _privateWriter.IsBackground = true;
 
             //if (_autoSearchProxy)
             //{
@@ -301,7 +364,7 @@ namespace ProxySeeker
             _timeOut = Convert.ToInt32(IniHelper.GetIniFileString(_systemIniFile, "proxy", "timeout", _defaultValue));
             _splitForScraper = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitforscraper", _defaultValue));
             _splitForPoster = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitforposter", _defaultValue));
-            _splitForForums = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitForForums", _defaultValue));
+            _splitForForums = Convert.ToBoolean(IniHelper.GetIniFileString(_systemIniFile, "proxy", "splitforforums", _defaultValue));
         }
 
         private void LoadSources()
@@ -316,9 +379,26 @@ namespace ProxySeeker
             }
         }
 
+        private void LoadPrivateProxies()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (StreamReader sr = new StreamReader(_privateFile))
+            {
+                String line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    _privateProxies.Enqueue(GetProxy(line));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Save all settings
+        /// </summary>
         public void SaveSystem()
         {
             SaveProxySettings();
+            SavePrivateProxies();
         }
 
         private void SaveProxySettings()
@@ -333,11 +413,107 @@ namespace ProxySeeker
             IniHelper.WriteKey(_systemIniFile, "proxy", "splitforscraper", _splitForScraper.ToString());
             IniHelper.WriteKey(_systemIniFile, "proxy", "splitforposter", _splitForPoster.ToString());
             IniHelper.WriteKey(_systemIniFile, "proxy", "splitforforums", _splitForForums.ToString());
-        }        
+        }
+
+        private void SavePrivateProxies()
+        {
+            using (StreamWriter writer = new StreamWriter(_privateFile, false))
+            {
+                foreach (var proxy in _privateProxies)
+                {
+                    writer.WriteLine(proxy.ToString());
+                }
+            }
+        }
 
         #endregion
 
-        #region testing funtions
+        #region private testing functions
+
+        private void privateTester_DoWork()
+        {
+            do
+            {
+                SystemProxy currentProxy = new SystemProxy();
+
+                lock (_dequeuePrivateLocker)
+                {
+                    if (_privateTestList.Count > 0)
+                        currentProxy = _privateTestList.Dequeue();
+                    else
+                        break;
+                }
+
+                if(currentProxy.ProxyIp != "" && currentProxy.ProxyPort != "")
+                {
+                    try
+                    {
+                        HttpWebRequest anonyRequest = WebRequest.Create(_checkAnonymousLink) as HttpWebRequest;
+                        WebProxy test = new WebProxy(currentProxy.ProxyIp, Convert.ToInt32(currentProxy.ProxyPort));
+                        if (currentProxy.Username != "" && currentProxy.Password != "")
+                            test.Credentials = new NetworkCredential(currentProxy.Username, currentProxy.Password);
+
+                        anonyRequest.Proxy = test;
+                        anonyRequest.Timeout = _timeOut;
+                        anonyRequest.KeepAlive = false;
+                        anonyRequest.ReadWriteTimeout = _timeOut;
+                        anonyRequest.ServicePoint.Expect100Continue = false;
+                        var document = new HtmlDocument();
+                        bool isDownload = false;
+
+                        using (var anonyResponse = (HttpWebResponse)anonyRequest.GetResponse())
+                        {
+                            Encoding anonyEncoding = Encoding.UTF8;
+                            using (var reader = new StreamReader(anonyResponse.GetResponseStream()))
+                            {
+                                document.Load(reader.BaseStream, anonyEncoding);
+                                isDownload = true;
+                            }
+                        }
+
+                        if (isDownload)
+                        {
+                            if (document.DocumentNode.InnerText.Contains("REQUEST_URI = /azenv.php") && document.DocumentNode.InnerText.Contains("HTTP_HOST = www.proxy-listen.de"))
+                            {
+                                if (!document.DocumentNode.InnerText.Contains("HTTP_X_FORWARDED_FOR"))
+                                {
+                                    lock (_enqueuePrivateLocker)
+                                    {
+                                        FilterPrivateProxies(currentProxy);
+                                    }
+                                }                                
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        
+                    }
+                }
+
+            } while (_privateTestList.Count > 0);
+
+            privateTester_DoWorkComplete();
+        }
+
+        private void privateTester_DoWorkComplete()
+        {
+            lock (_finishPrivateLocker)
+                _finishPrivateWorker++;
+
+            if (_finishPrivateWorker == _totalPrivateWorker)
+            {
+                PrivateMessageHandler.Instance.AddMessage("Finish testing private proxies. Found " + _alivePrivate.Count + " alive private proxies.");
+                UpdatePrivateProxies();
+                _privateWriter.Start(); //write private proxies to file
+                _isPrivateTesting = false;
+                _finishPrivateWorker = 0;
+            }
+        }
+
+        #endregion
+
+        #region public testing funtions
 
         private void tester_DoWork()
         {
@@ -345,7 +521,7 @@ namespace ProxySeeker
             {
                 SystemProxy currentProxy = new SystemProxy();
 
-                lock (_dequeueLocker)
+                lock (_dequeuePublicLocker)
                 {
                     if (_testList.Count > 0)
                         currentProxy = _testList.Dequeue();
@@ -385,9 +561,9 @@ namespace ProxySeeker
                                 {
                                     if (!document.DocumentNode.InnerText.Contains("HTTP_X_FORWARDED_FOR"))
                                     {
-                                        lock (_enqueueLocker)
+                                        lock (_enqueuePublicLocker)
                                         {
-                                            FilterProxies(currentProxy);
+                                            FilterPublicProxies(currentProxy);
                                         }
                                     }
                                     else
@@ -402,9 +578,9 @@ namespace ProxySeeker
                                 }
                                 else
                                 {
-                                    lock (_enqueueLocker)
+                                    lock (_enqueuePublicLocker)
                                     {
-                                        FilterProxies(currentProxy);
+                                        FilterPublicProxies(currentProxy);
                                     }
                                 }
                             }
@@ -426,8 +602,7 @@ namespace ProxySeeker
                         {
                             _death++;
                             _updateNumber.Invoke(_currentWD, _deathNumber, CreateDeathMessage(_death));
-                        }
-                        
+                        }                        
                     }
                 }
                 else
@@ -439,16 +614,16 @@ namespace ProxySeeker
 
         private void tester_DoWorkComplete()
         {
-            lock (_finishLocker)
+            lock (_finishPublicLocker)
                 _finishWorker++;
 
             if (_finishWorker == _threads)
             {
-                ApplicationMessageHandler.Instance.AddMessage("Finish testing proxies. Found  " + _alive.Count + " alive proxies.");
+                PublicMessageHandler.Instance.AddMessage("Finish testing public proxies. Found  " + _alivePublic.Count + " alive public proxies.");
                 UpdateProxies();
                 WriteStatistics();
                 SplitProxies();
-                _isTesting = false;
+                _isPublicTesting = false;
                 _finishWorker = 0;
             }
         }
@@ -502,8 +677,8 @@ namespace ProxySeeker
 
                             if (proxies.Count > 0)
                             {
-                                ApplicationMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
-                                lock (_enqueueLocker)
+                                PublicMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
+                                lock (_enqueuePublicLocker)
                                 {
                                     _sources.ChangeFounded(link, proxies.Count);
                                     PrepareTestProxies(proxies, link);
@@ -511,8 +686,8 @@ namespace ProxySeeker
                             }
                             else
                             {
-                                ApplicationMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
-                                lock (_enqueueLocker)
+                                PublicMessageHandler.Instance.AddMessage("Found " + proxies.Count + " proxies at " + link);
+                                lock (_enqueuePublicLocker)
                                 {
                                     _sources.ChangeFounded(link, 0);
                                     _sources.ChangeAdded(link, 0);
@@ -528,8 +703,8 @@ namespace ProxySeeker
 
                     if (!IsDownload)
                     {
-                        ApplicationMessageHandler.Instance.AddMessage("Cannot find any proxy at " + link + "!");
-                        lock (_enqueueLocker)
+                        PublicMessageHandler.Instance.AddMessage("Cannot find any proxy at " + link + "!");
+                        lock (_enqueuePublicLocker)
                         {
                             _sources.ChangeFounded(link, 0);
                             _sources.ChangeAdded(link, 0);
@@ -547,18 +722,18 @@ namespace ProxySeeker
         /// </summary>
         private void founder_DoWorkComplete()
         {
-            lock (_finishLocker)
+            lock (_finishPublicLocker)
                 _finishFounder++;
 
             if (_finishFounder == 10)
             {                
                 if (_testProxy)
                 {
-                    ApplicationMessageHandler.Instance.AddMessage("Found  " + _foundProxies.Count + " proxies. Begin testing now!");
-                    IsTesting = true;
+                    PublicMessageHandler.Instance.AddMessage("Found  " + _foundProxies.Count + " proxies. Begin testing now!");
+                    IsPublicTesting = true;
                     IsScraping = false;
                     UpdateProxies(_foundProxies);
-                    CreateTestList();
+                    CreatePublicTestList();
                     //invoke textboxes here
                     Total = _publicProxies.Count;
                     _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, Total));
@@ -572,10 +747,10 @@ namespace ProxySeeker
                 }
                 else
                 {
-                    ApplicationMessageHandler.Instance.AddMessage("Found  " + _foundProxies.Count + " proxies.");
+                    PublicMessageHandler.Instance.AddMessage("Found  " + _foundProxies.Count + " proxies.");
                     IsScraping = false;
                     UpdateProxies(_foundProxies);
-                    CreateTestList();                    
+                    CreatePublicTestList();                    
                     //invoke textboxes here
                     Total = _publicProxies.Count;
                     _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(0, Total));
@@ -609,7 +784,7 @@ namespace ProxySeeker
 
                     if (DateTime.Now > wakeUpPoint)
                     {
-                        if (!IsTesting && !IsScraping)
+                        if (!IsPublicTesting && !IsScraping)
                         {
                             flag = true;
                             IsScraping = true;
@@ -670,7 +845,7 @@ namespace ProxySeeker
         /// <param name="updateProxyTable"></param>
         /// <param name="updateTextBox"></param>
         public void RegisterActions(Action<Window, TextBox, string> updateTextBox)
-        {            
+        {
             _updateNumber = updateTextBox;
         }
 
@@ -681,12 +856,14 @@ namespace ProxySeeker
         /// <param name="tbAlive"></param>
         /// <param name="tbDeath"></param>
         /// <param name="proxyTable"></param>
-        public void RegisterControls(Window wd, TextBox tbAlive, TextBox tbTotal, TextBox tbDeath)
+        public void RegisterControls(Window wd, TextBox tbAlive, TextBox tbTotal, TextBox tbDeath, TextBox tbPrivateAlive, TextBox tbPrivateTotal)
         {
             _currentWD = wd;
             _aliveNumber = tbAlive;
             _totalNumber = tbTotal;
             _deathNumber = tbDeath;
+            _alivePrivateNumber = tbPrivateAlive;
+            _totalPrivateNumber = tbPrivateTotal;
         }
 
         /// <summary>
@@ -704,15 +881,39 @@ namespace ProxySeeker
 
         }
 
-        public void RunHandler()
+        public void StartPublicHandler()
         {
-            if (!IsTesting && !IsScraping)
+            if (!IsPublicTesting && !IsScraping)
             {                
                 _proxyManager.Start();
-                ApplicationMessageHandler.Instance.AddMessage("Begin running proxy system!");
+                PublicMessageHandler.Instance.AddMessage("Begin running proxy system!");
             }
             else
-                ApplicationMessageHandler.Instance.AddMessage("Proxy system is already running!");
+                PublicMessageHandler.Instance.AddMessage("Proxy system is already running!");
+        }
+
+        public void StartPrivateHandler()
+        {
+            if (!IsPrivateTesting)
+            {
+                PrivateMessageHandler.Instance.AddMessage("Begin testing private proxies!");
+                IsPrivateTesting = true;
+                CreatePrivateTestList();
+                //invoke textboxes here
+                Total = _privateProxies.Count;
+                _updateNumber.Invoke(_currentWD, _alivePrivateNumber, CreateAliveMessage(0, Total));
+                _updateNumber.Invoke(_currentWD, _totalPrivateNumber, CreateTotalMessage(Total));
+
+                for (int i = 0; i < _totalPrivateWorker; i++)
+                {
+                    _privateTester[i] = new Thread(privateTester_DoWork);
+                    _privateTester[i].IsBackground = true;
+                    _privateTester[i].Start();
+                }
+            }
+            else
+                PrivateMessageHandler.Instance.AddMessage("Private proxies is current running!");
+            
         }
 
         /// <summary>
@@ -770,14 +971,14 @@ namespace ProxySeeker
         }
 
         /// <summary>
-        /// Update proxy table after crawling and testing
+        /// Update public proxy table after crawling and testing
         /// </summary>
         private void UpdateProxies()
         {
-            lock (_usingLocker)
+            lock (_usingPublicLocker)
             {
                 _publicProxies.Clear();
-                foreach (var i in _alive)
+                foreach (var i in _alivePublic)
                 {
                     if (_checkAnonymous)
                         _sources.ChangeAnonymous(i);
@@ -785,7 +986,7 @@ namespace ProxySeeker
                         _sources.ChangeWorking(i);
                     _publicProxies.Enqueue(i);
                 }
-                _alive = new List<SystemProxy>();                               
+                _alivePublic = new List<SystemProxy>();                               
             }
         }
 
@@ -795,7 +996,7 @@ namespace ProxySeeker
         /// <param name="proxies"></param>
         private void UpdateProxies(Queue<SystemProxy> proxies)
         {
-            lock (_usingLocker)
+            lock (_usingPublicLocker)
             {
                 _publicProxies.Clear();
                 foreach (var i in proxies)
@@ -803,16 +1004,43 @@ namespace ProxySeeker
                     _publicProxies.Enqueue(i);
                 }
             }
-        }        
+        }
 
         /// <summary>
-        /// Create proxy testing list
+        /// Update private proxy table
         /// </summary>
-        private void CreateTestList()
+        private void UpdatePrivateProxies()
         {
-            lock (_usingLocker)
+            lock (_usingPrivateLocker)
+            {
+                _privateProxies.Clear();
+                foreach (var i in _alivePrivate)
+                {
+                    _privateProxies.Enqueue(i);
+                }
+                _alivePrivate = new List<SystemProxy>();
+            }
+        }
+        
+        /// <summary>
+        /// Create public proxy testing list
+        /// </summary>
+        private void CreatePublicTestList()
+        {
+            lock (_usingPublicLocker)
             {                
                 _testList = CloneProxies(_publicProxies);                
+            }
+        }
+
+        /// <summary>
+        /// Create private proxy testing list
+        /// </summary>
+        private void CreatePrivateTestList()
+        {
+            lock (_usingPrivateLocker)
+            {
+                _privateTestList = CloneProxies(_privateProxies);
             }
         }
 
@@ -832,13 +1060,23 @@ namespace ProxySeeker
         }
 
         /// <summary>
-        /// Add a live proxy to list
+        /// Add a live public proxy to list
         /// </summary>
         /// <param name="proxy"></param>
-        private void FilterProxies(SystemProxy proxy)
+        private void FilterPublicProxies(SystemProxy proxy)
         {
-            _alive.Add(proxy);            
-            _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(_alive.Count, _foundProxies.Count));                
+            _alivePublic.Add(proxy);
+            _updateNumber.Invoke(_currentWD, _aliveNumber, CreateAliveMessage(_alivePublic.Count, _foundProxies.Count));                
+        }
+
+        /// <summary>
+        /// Add a live private proxy to list
+        /// </summary>
+        /// <param name="proxy"></param>
+        private void FilterPrivateProxies(SystemProxy proxy)
+        {
+            _alivePrivate.Add(proxy);
+            _updateNumber.Invoke(_currentWD, _alivePrivateNumber, CreateAliveMessage(_alivePrivate.Count, _privateProxies.Count));
         }
 
         /// <summary>
@@ -1175,11 +1413,13 @@ namespace ProxySeeker
                 }
             }
 
-            _writer.Start();
+            _publicWriter.Start();
         }
 
-
-        private void WriteProxyToFile()
+        /// <summary>
+        /// Write split proxy packages to appdata folder
+        /// </summary>
+        private void WritePublicProxyToFile()
         {
             bool isWritten = false;
 
@@ -1276,7 +1516,66 @@ namespace ProxySeeker
                     Thread.Sleep(1000);
                 }
 
+            } while (!isWritten);            
+        }
+
+        /// <summary>
+        /// Write alive private proxies to appdata folder
+        /// </summary>
+        private void WritePrivateProxyToFile()
+        {
+            bool isWritten = false;
+
+            do
+            {
+                try
+                {
+                    using (FileStream privateStream = new FileStream(_savePath + "xprivate.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        using (StreamWriter writer = new StreamWriter(privateStream, Encoding.UTF8))
+                        {
+                            foreach (var proxy in _privateProxies)
+                            {
+                                writer.WriteLine(proxy.ToString());
+                            }
+                        }
+                        isWritten = true;
+                    }
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(1000);
+                }
             } while (!isWritten);
+        }
+
+        /// <summary>
+        /// Get public/private proxy from string
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private SystemProxy GetProxy(string value)
+        {
+            string[] proxyValues = value.Split(':');
+            SystemProxy temp = new SystemProxy();
+
+            switch (proxyValues.Length)
+            {
+                case 2:
+                    temp.ProxyIp = proxyValues[0];
+                    temp.ProxyPort = proxyValues[1];
+                    temp.IsPrivate = true;
+                    break;
+                case 4:
+                    temp.ProxyIp = proxyValues[0];
+                    temp.ProxyIp = proxyValues[1];
+                    temp.Username = proxyValues[2];
+                    temp.Password = proxyValues[3];
+                    temp.IsPrivate = true;
+                    break;
+            }
+
+            return temp;
         }
 
         #endregion        

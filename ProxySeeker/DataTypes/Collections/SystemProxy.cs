@@ -49,6 +49,14 @@ namespace ProxySeeker.DataTypes
             set { _isAlive = value; }
         }
 
+        private bool _isPrivate;
+
+        public bool IsPrivate
+        {
+            get { return _isPrivate; }
+            set { _isPrivate = value; }
+        }
+
         private string _countryCode;
 
         public string CountryCode
@@ -70,22 +78,23 @@ namespace ProxySeeker.DataTypes
         #region constructors
 
         public SystemProxy()
-            : this("", "", "", "", false, "", 0)
+            : this("", "", "", "", false, false, "", 0)
         {
         }
 
         public SystemProxy(string ip, string port, string username, string password)
-            : this(ip, port, username, password, false, "", 0)
+            : this(ip, port, username, password, false, false, "", 0)
         {
         }
 
-        public SystemProxy(string ip, string port, string username, string password, bool isAlive, string countryCode, double speed)
+        public SystemProxy(string ip, string port, string username, string password, bool isAlive, bool isPrivate, string countryCode, double speed)
         {
             this._proxyIp = ip;
             this._proxyPort = port;
             this._username = username;
             this._password = password;            
             this._isAlive = isAlive;
+            this._isPrivate = isPrivate;
             this._countryCode = countryCode;
             this._speed = speed;
         }
@@ -95,8 +104,11 @@ namespace ProxySeeker.DataTypes
         #region utility Methods
 
         public override string ToString()
-        {            
-            return String.Format("{0}:{1}", _proxyIp, _proxyPort);
+        {
+            if(!_isPrivate)
+                return String.Format("{0}:{1}", _proxyIp, _proxyPort);
+            else
+                return String.Format("{0}:{1}:{2}:{3}", _proxyIp, _proxyPort, _username, _password);
         }
 
         public string showProxySpeed()

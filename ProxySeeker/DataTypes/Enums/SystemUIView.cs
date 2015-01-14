@@ -8,8 +8,8 @@ namespace ProxySeeker.DataTypes
 {
     public enum SystemUIView
     {
-        WelcomeUI,
-        WorkingUI,
+        PrivateUI,
+        PublicUI,
         SettingsUI
     }
 }

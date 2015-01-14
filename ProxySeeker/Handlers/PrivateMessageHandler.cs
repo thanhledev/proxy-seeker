@@ -20,12 +20,12 @@ using System.Threading;
 
 namespace ProxySeeker
 {
-    public sealed class ApplicationMessageHandler
+    public sealed class PrivateMessageHandler
     {
         #region variables
 
         //instance & locker
-        private static ApplicationMessageHandler _instance = null;
+        private static PrivateMessageHandler _instance = null;
         private static readonly object _instanceLocker = new object();
 
         //using variables
@@ -74,7 +74,7 @@ namespace ProxySeeker
 
         #region constructors
 
-        public static ApplicationMessageHandler Instance
+        public static PrivateMessageHandler Instance
         {
             get
             {
@@ -82,14 +82,14 @@ namespace ProxySeeker
                 {
                     if (_instance == null)
                     {
-                        _instance = new ApplicationMessageHandler();
+                        _instance = new PrivateMessageHandler();
                     }
                 }
                 return _instance;
             }
         }
 
-        ApplicationMessageHandler()
+        PrivateMessageHandler()
         {
             _interval = 20;
             _messageTB = new TextBox();
@@ -105,7 +105,7 @@ namespace ProxySeeker
         #region private functions
 
         /// <summary>
-        /// ApplicationMessageHandler worker doWork function
+        /// PublicMessageHandler worker doWork function
         /// </summary>
         private void worker_DoWork()
         {
@@ -135,7 +135,7 @@ namespace ProxySeeker
         }
 
         /// <summary>
-        /// ApplicationMessageHandler worker doWorkComplete function
+        /// PublicMessageHandler worker doWorkComplete function
         /// </summary>
         private void worker_DoWorkComplete()
         {

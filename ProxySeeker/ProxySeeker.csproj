@@ -100,7 +100,8 @@
     <Compile Include="DataTypes\ProxyScraper\ProxySakuraScraper.cs" />
     <Compile Include="DataTypes\ProxyScraper\TxtProxyScraper.cs" />
     <Compile Include="Handlers\ApplicationHandler.cs" />
-    <Compile Include="Handlers\ApplicationMessageHandler.cs" />
+    <Compile Include="Handlers\PrivateMessageHandler.cs" />
+    <Compile Include="Handlers\PublicMessageHandler.cs" />
     <Compile Include="Handlers\ProxyHandler.cs" />
     <Compile Include="Handlers\StaticRandomHandler.cs" />
     <Compile Include="MainWindow.xaml.cs">

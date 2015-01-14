@@ -88,16 +88,20 @@ namespace ProxySeeker
             ApplicationStatisticsHandler.Instance.SetupHandler(this, tbCPUConsumption, tbRamConsumption, updateStatisticTextBox);
             ApplicationStatisticsHandler.Instance.RunHandler();
 
-            //Setup & run the ApplicationMessageHandler
-            ApplicationMessageHandler.Instance.RegisterHandler(this, tbLogs, updateLogs);
-            ApplicationMessageHandler.Instance.RunHandler();
+            //Setup & run the PublicMessageHandler
+            PublicMessageHandler.Instance.RegisterHandler(this, tbPublicLogs, updateLogs);
+            PublicMessageHandler.Instance.RunHandler();
+
+            //Setup & run the PrivateMessageHandler
+            PrivateMessageHandler.Instance.RegisterHandler(this, tbPrivateLogs, updateLogs);
+            PrivateMessageHandler.Instance.RunHandler();
 
             //Setup the ProxyHandler
-            ProxyHandler.Instance.RegisterControls(this, tbAliveProxy, tbTotalProxy, tbDeathProxy);
+            ProxyHandler.Instance.RegisterControls(this, tbAlivePublicProxy, tbTotalPublicProxy, tbDeathPublicProxy, tbAlivePrivateProxy, tbTotalPrivateProxy);
             ProxyHandler.Instance.RegisterActions(updateStatisticTextBox);
 
             _uiHandler.SetupHandle(this, hiddenChange, showChange);
-            _mainView = SystemUIView.WelcomeUI;
+            _mainView = SystemUIView.PublicUI;
             Change_WindowView(_mainView);
         }        
 
@@ -165,11 +169,11 @@ namespace ProxySeeker
 
             switch (lbl.Content.ToString().ToLower())
             {
-                case "// guide":
-                    Change_WindowView(SystemUIView.WelcomeUI);
+                case "// private":
+                    Change_WindowView(SystemUIView.PrivateUI);
                     break;
-                case "// seeking":
-                    Change_WindowView(SystemUIView.WorkingUI);
+                case "// public":
+                    Change_WindowView(SystemUIView.PublicUI);
                     break;                
                 case "// configure":
                     Change_WindowView(SystemUIView.SettingsUI);
@@ -301,7 +305,17 @@ namespace ProxySeeker
         /// <param name="e"></param>
         private void btnControl_Click(object sender, RoutedEventArgs e)
         {
-            ProxyHandler.Instance.RunHandler();
+            ProxyHandler.Instance.StartPublicHandler();
+        }
+
+        private void btnPrivateControl_Click(object sender, RoutedEventArgs e)
+        {
+            ProxyHandler.Instance.StartPrivateHandler();
+        }
+
+        private void btnAddPrivateProxies_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         #endregion
@@ -402,11 +416,11 @@ namespace ProxySeeker
             _uiHandler.ResetHandle();
             switch (view)
             {
-                case SystemUIView.WelcomeUI:
-                    Display_WelcomeInterface();
+                case SystemUIView.PublicUI:
+                    Display_PublicInterface();
                     break;
-                case SystemUIView.WorkingUI:
-                    Display_WorkingInterface();
+                case SystemUIView.PrivateUI:
+                    Display_PrivateInterface();
                     break;
                 case SystemUIView.SettingsUI:
                     Display_SettingsInterface();
@@ -417,13 +431,13 @@ namespace ProxySeeker
         /// <summary>
         /// Display Welcome Interface
         /// </summary>
-        private void Display_WelcomeInterface()
+        private void Display_PublicInterface()
         {
             //add visible dockpanels
-            _uiHandler.AddShow(dpUserWelcome);
+            _uiHandler.AddShow(dpPublicProxies);
 
             //add hidden dockpanels
-            _uiHandler.AddHidden(dpWorking);
+            _uiHandler.AddHidden(dpPrivateProxies);
             _uiHandler.AddHidden(dpSettings);
 
             _uiHandler.RunHandle(true);
@@ -432,13 +446,13 @@ namespace ProxySeeker
         /// <summary>
         /// Display working interface
         /// </summary>
-        private void Display_WorkingInterface()
+        private void Display_PrivateInterface()
         {
             //add visible dockpanels
-            _uiHandler.AddShow(dpWorking);
+            _uiHandler.AddShow(dpPrivateProxies);
 
             //add hidden dockpanels
-            _uiHandler.AddHidden(dpUserWelcome);
+            _uiHandler.AddHidden(dpPublicProxies);
             _uiHandler.AddHidden(dpSettings);
 
             _uiHandler.RunHandle(true);
@@ -453,13 +467,12 @@ namespace ProxySeeker
             _uiHandler.AddShow(dpSettings);
 
             //add hidden dockpanels
-            _uiHandler.AddHidden(dpWorking);
-            _uiHandler.AddHidden(dpUserWelcome);
+            _uiHandler.AddHidden(dpPublicProxies);
+            _uiHandler.AddHidden(dpPrivateProxies);
 
             _uiHandler.RunHandle(true);
         }
 
-        #endregion                                       
-                
+        #endregion
     }
 }
